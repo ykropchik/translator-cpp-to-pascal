@@ -1,8 +1,9 @@
 from source.Lexer.LexicalAnalyzer import LexicalAnalyzer
+import re
 
 if __name__ == '__main__':
-    with open('test.cpp', 'r') as file:
-        lexicalAnalyzer = LexicalAnalyzer(file.read())
+    lexicalAnalyzer = LexicalAnalyzer('test.cpp')
 
     lexicalAnalyzer.startParsing()
     lexicalAnalyzer.printLexemes()
+    lexicalAnalyzer.printErrors()
