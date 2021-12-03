@@ -1,7 +1,9 @@
-def print_hi(name):
-    print(f'Hi, {name}')
-
+from source.Lexer.LexicalAnalyzer import LexicalAnalyzer
+import re
 
 if __name__ == '__main__':
-    print_hi('PyCharm')
+    lexicalAnalyzer = LexicalAnalyzer('test.cpp')
 
+    lexicalAnalyzer.startParsing()
+    lexicalAnalyzer.printLexemes()
+    lexicalAnalyzer.printErrors()
