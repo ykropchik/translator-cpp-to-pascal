@@ -2,6 +2,7 @@ from source.Lexer.LexemeType import LexemeType
 from source.Lexer.LexemeType import DictionaryOfLexemes
 import re
 
+
 class LexicalAnalyzer:
     class LexemeArrayType:
         def __init__(self, lexeme, lexemeType, lineNumber):
@@ -65,13 +66,13 @@ class LexicalAnalyzer:
             return
 
         if re.match('^--.+', word):
-            self.lexemeArray.append(self.LexemeArrayType('--', LexemeType.INCREMENT, lineNumber))
+            self.lexemeArray.append(self.LexemeArrayType('--', LexemeType.DECREMENT, lineNumber))
             self.__checkBySymbol(word.removeprefix('--'), lineNumber)
             return
 
         if re.match('.+--$', word):
             self.__checkBySymbol(word.removesuffix('--'), lineNumber)
-            self.lexemeArray.append(self.LexemeArrayType('--', LexemeType.INCREMENT, lineNumber))
+            self.lexemeArray.append(self.LexemeArrayType('--', LexemeType.DECREMENT, lineNumber))
             return
 
         if re.match('^[A-z_-]+[A-z_-|\d]*$', word):
