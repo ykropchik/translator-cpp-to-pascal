@@ -6,7 +6,7 @@ class LexemeType(Enum):
     PLUS = 'LEXEME-PLUS'
     INCREMENT = 'LEXEME-INCREMENT'
     MINUS = 'LEXEME-MINUS'
-    DECREMENT = 'LEXEME-MINUS'
+    DECREMENT = 'LEXEME-DECREMENT'
     MULTIPLICATION = 'LEXEME-MULTIPLICATION'
     DIVISION = 'LEXEME-DIVISION'
     MOD = 'LEXEME-MOD'
@@ -47,7 +47,7 @@ class LexemeType(Enum):
     # Reserved service names
     INCLUDE = 'LEXEME-INCLUDE'
     STD = 'LEXEME-STD'
-    MAIN = 'LEMEME-MAIN'
+    MAIN = 'LEXEME-MAIN'
     RETURN = 'LEXEME-RETURN'
 
     # Reserved functions names
@@ -86,7 +86,7 @@ DictionaryOfLexemes = {
     '+': LexemeType.PLUS,
     '++': LexemeType.INCREMENT,
     '-': LexemeType.MINUS,
-    '--': LexemeType.MINUS,
+    '--': LexemeType.DECREMENT,
     '*': LexemeType.MULTIPLICATION,
     '/': LexemeType.DIVISION,
     '%': LexemeType.MOD,
@@ -105,7 +105,7 @@ DictionaryOfLexemes = {
     'void': LexemeType.VOID,
     'int': LexemeType.INT,
     'long': LexemeType.LONG,
-    'shot': LexemeType.SHORT,
+    'short': LexemeType.SHORT,
     'unsigned': LexemeType.UNSIGNED,
     'bool': LexemeType.BOOL,
     'float': LexemeType.FLOAT,
