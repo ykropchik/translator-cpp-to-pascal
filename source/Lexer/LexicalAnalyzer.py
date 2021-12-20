@@ -20,6 +20,9 @@ class LexicalAnalyzer:
         self.lexemeArray = []
         self.errors = []
 
+    def __del__(self):
+        self.inputFile.close()
+
     def __removeSpaces(self, line):
         # self.inputFile = self.inputFile.replace("\n", "")
         return " ".join(line.split())
@@ -102,3 +105,6 @@ class LexicalAnalyzer:
         width = max(map(lambda lexeme: len(lexeme.lexemeType.name), self.lexemeArray)) + 1
         for lexeme in self.lexemeArray:
             print("Line: %s - [ %s ] - %s" % (lexeme.lineNumber, lexeme.lexemeType.name.rjust(width), lexeme.lexeme))
+
+    def returnLexemes(self, testCaseNumber):
+        return self.lexemeArray[testCaseNumber].lexemeType.name
