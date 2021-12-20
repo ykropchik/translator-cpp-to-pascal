@@ -12,4 +12,5 @@ int main() {
     float e = -12312E+10;
     float f = -123123E-213;
     float g = number(b);
+    char g = '1';
 }
