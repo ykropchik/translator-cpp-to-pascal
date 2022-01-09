@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3a9648af-f887-4383-a0a1-be9aa2566021" name="Changes" comment="Added __checkBySymbol method">
-      <change afterPath="$PROJECT_DIR$/source/Parser/Earley.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/Parser/GrammarParser.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/Parser/__init__.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/source/grammar.txt" afterDir="false" />
+    <list default="true" id="3a9648af-f887-4383-a0a1-be9aa2566021" name="Changes" comment="Completed tree builder">
+      <change afterPath="$PROJECT_DIR$/source/grammar.json" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/Parser/Earley.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/Parser/Earley.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/Parser/GrammarParser.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/Parser/GrammarParser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/Parser/TreeBuilder.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/grammar.txt" beforeDir="false" afterPath="$PROJECT_DIR$/source/grammar.txt" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/syntactical analyzer/index.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/Parser/TreeBuilder.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -48,14 +49,19 @@
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+    <property name="run.code.analysis.last.selected.profile" value="aDefault" />
     <property name="settings.editor.selected.configurable" value="preferences.sourceCode" />
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="D:\Users\ykrop\Desktop\Study\LAST TRASH\translator-cpp-to-pascal" />
+      <recent name="D:\Users\ykrop\Desktop\Study\LAST TRASH\translator-cpp-to-pascal\source" />
       <recent name="D:\Users\ykrop\Desktop\Study\LAST TRASH\translator-cpp-to-pascal\syntactical analyzer" />
       <recent name="D:\Users\ykrop\Desktop\Study\LAST TRASH\translator-cpp-to-pascal\semantic analyzer" />
       <recent name="D:\Users\ykrop\Desktop\Study\LAST TRASH\translator-cpp-to-pascal\optimizing converter" />
-      <recent name="D:\Users\ykrop\Desktop\Study\LAST TRASH\translator-cpp-to-pascal\lexical analyzer" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="D:\Users\ykrop\Desktop\Study\LAST TRASH\translator-cpp-to-pascal\source" />
     </key>
   </component>
   <component name="RunManager">
@@ -109,7 +115,12 @@
       <workItem from="1639012569289" duration="1331000" />
       <workItem from="1639026553252" duration="1287000" />
       <workItem from="1639055083021" duration="582000" />
-      <workItem from="1639298044186" duration="375000" />
+      <workItem from="1639298044186" duration="1002000" />
+      <workItem from="1639710718112" duration="156000" />
+      <workItem from="1640136083131" duration="4635000" />
+      <workItem from="1640167644138" duration="4295000" />
+      <workItem from="1641602001444" duration="28447000" />
+      <workItem from="1641687883654" duration="8748000" />
     </task>
     <task id="LOCAL-00001" summary="Init project">
       <created>1632265424332</created>
@@ -146,7 +157,14 @@
       <option name="project" value="LOCAL" />
       <updated>1633939769555</updated>
     </task>
-    <option name="localTasksCounter" value="6" />
+    <task id="LOCAL-00006" summary="Realized earley algorithm">
+      <created>1639298448364</created>
+      <option name="number" value="00006" />
+      <option name="presentableId" value="LOCAL-00006" />
+      <option name="project" value="LOCAL" />
+      <updated>1639298448364</updated>
+    </task>
+    <option name="localTasksCounter" value="7" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -170,10 +188,11 @@
     <MESSAGE value="Update project structure" />
     <MESSAGE value="Create beta lexical analyzer" />
     <MESSAGE value="Added __checkBySymbol method" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added __checkBySymbol method" />
+    <MESSAGE value="Realized earley algorithm" />
+    <option name="LAST_COMMIT_MESSAGE" value="Realized earley algorithm" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/main_py$main.coverage" NAME="main Coverage Results" MODIFIED="1639298385618" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/source" />
+    <SUITE FILE_PATH="coverage/main_py$main.coverage" NAME="main Coverage Results" MODIFIED="1641697168163" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/source" />
     <SUITE FILE_PATH="coverage/main_py$__main__.coverage" NAME="main Coverage Results" MODIFIED="1633131047841" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/source" />
   </component>
 </project>
