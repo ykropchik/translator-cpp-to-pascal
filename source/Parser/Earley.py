@@ -140,6 +140,11 @@ class Node(object):
         self.value = value
         self.children = children
 
+    def __repr__(self):
+        terms = [str(p) for p in self.value.production]
+        terms.insert(self.value.dot_index, u"·")
+        return "%-5s -> %-16s" % (self.value.name, " ".join(terms))
+
     def print_(self, level=0):
         print("│" + " " * level + " " + str(self.value))
         for child in self.children:
@@ -147,6 +152,18 @@ class Node(object):
 
 
 class Earley:
+    def __init__(self, rules, axiom):
+        self.rules = rules
+        self.axiom = None
+        self.table = None
+
+        for rule in rules:
+            if rule.name == axiom:
+                self.axiom = rule
+
+        if self.axiom is None:
+            raise ValueError("Invalid axiom")
+
     def __predict(self, col, rule, state):
         for prod in rule.productions:
             col.add(State(rule.name, prod, 0, col))
@@ -170,12 +187,11 @@ class Earley:
                 col.add(State(st.name, st.production, st.dot_index + 1, st.start_column, st if st.parent is None else st.parent))
                 st.addChild(col[-1])
 
+    def parse(self, lexemeArray):
+        self.table = [Column(i, tok) for i, tok in enumerate([None] + lexemeArray)]
+        self.table[0].add(State(GAMMA_RULE, Production(self.axiom), 0, self.table[0]))
 
-    def parse(self, rule, text):
-        table = [Column(i, tok) for i, tok in enumerate([None] + text.lower().split())]
-        table[0].add(State(GAMMA_RULE, Production(rule), 0, table[0]))
-
-        for i, col in enumerate(table):
+        for i, col in enumerate(self.table):
             for state in col:
                 if state.completed():
                     self.__complete(col, state)
@@ -183,25 +199,24 @@ class Earley:
                     term = state.next_term()
                     if isinstance(term, Rule):
                         self.__predict(col, term, state)
-                    elif i + 1 < len(table):
-                        self.__scan(table[i + 1], state, term)
+                    elif i + 1 < len(self.table):
+                        self.__scan(self.table[i + 1], state, term)
 
             # col.print_(completedOnly = True)
 
         # find gamma rule in last table column (otherwise fail)
-        for st in table[-1]:
+        for st in self.table[-1]:
             if st.name == GAMMA_RULE and st.completed():
-                self.printTable(table)
-                return table
+                return True
         else:
-            raise ValueError("parsing failed")
+            return False
 
 
-    def printTable(self, table, type="ver"):
+    def printTable(self, type="ver"):
         maxRow = 0
         colNum = 0
         if type == "hor":
-            for col in table:
+            for col in self.table:
                 print("| %135s " % str(colNum).center(135), end="")
                 colNum += 1
                 if len(col.states) > maxRow:
@@ -210,7 +225,7 @@ class Earley:
             print("|", end="\n")
 
             for i in range(0, maxRow):
-                for col in table:
+                for col in self.table:
                     if i >= len(col.states):
                         break
                     else:
@@ -219,7 +234,7 @@ class Earley:
                 print("|", end="\n")
         else:
             i = 0
-            for col in table:
+            for col in self.table:
                 print(HORIZONTAL_SYMBOL * 15, " E_{0} ".format(i), HORIZONTAL_SYMBOL * 15)
                 for state in col.states:
                     print(str(state).ljust(len(str(state))))
@@ -230,33 +245,124 @@ class Earley:
 class TreeBuilder:
     def __init__(self, table):
         self.table = table
+        self.tree = None
+        self.file = None
 
     def build_tree(self):
         for state in self.table[-1]:
             if state.name == GAMMA_RULE and state.completed():
-                return self.__reduce_node(self.table[0].states[0])
+                # self.tree = self.table[0].states[0]
+                self.tree = self.__reduce_node(self.table[0].states[0])
+                return
         else:
             raise ValueError("Invalid earley table")
 
     def __reduce_node(self, state):
         result = Node(state, [])
+
+        if not state.children:
+            return result
+
         for child in state.children:
-            if not child.children:
-                if state.name == child.name:
-                    result.value = child
-            else:
-                newChild = self.__reduce_node(child)
-                # result.children.append(newChild)
-                if newChild.value.name == state.name:
-                    result.value = newChild.value
-                    for childItem in newChild.children:
-                        result.children.append(childItem)
-                else:
-                    result.children.append(newChild)
+            child = self.__reduce_node(child)
+
+            if child.value.name == state.name and child.value.production == state.production and child.value.completed():
+                result.value = child.value
+                result.children.extend(child.children)
+            elif child.value.completed():
+                if (child.value.rules and child.children) or not child.value.rules:
+                    result.children.append(child)
+
         return result
 
-    def printTree(self, tree):
-        self.__printTreeHelper(tree)
+    # def __reduce_node(self, state):
+    #     result = Node(state, [])
+    #     for child in state.children:
+    #         if child.children:
+    #             child = self.__reduce_node(child)
+    #
+    #         if isinstance(child, State):
+    #             if child.completed():
+    #                 if child.name == state.name and child.production == state.production:
+    #                     result.value = child
+    #                 else:
+    #                     result.children.append(child)
+    #         else:
+    #             result.children.append(child)
+    #
+    #     return result
+
+    # def __reduce_node(self, state):
+    #     result = Node(state, [])
+    #     for child in state.children:
+    #         if child.children:
+    #             child = self.__reduce_node(child)
+    #
+    #         if isinstance(child, Node):
+    #             if state.name == child.value.name and state.production == child.value.production:
+    #                 result.value = child.value
+    #                 if child.children:
+    #                     for childItem in child.children:
+    #                         result.children.append(childItem)
+    #             else:
+    #                 result.children.append(child)
+    #         else:
+    #             if state.name == child.name and state.production == child.production:
+    #                 result.value = child
+    #     return result
+
+    # def __reduce_node(self, state):
+    #     result = Node(state, [])
+    #     for child in state.children:
+    #         if not child.children:
+    #             if state.name == child.name and state.production == child.production:
+    #                 result.value = child
+    #         else:
+    #             newChild = self.__reduce_node(child)
+    #             # result.children.append(newChild)
+    #             if newChild.value.name == state.name and state.production == child.production:
+    #                 result.value = newChild.value
+    #                 for childItem in newChild.children:
+    #                     result.children.append(childItem)
+    #             else:
+    #                 result.children.append(newChild)
+    #     return result
+
+    def printTreeToFile(self):
+        if self.tree is not None:
+            with open("Tree.txt", "w+", encoding="utf-8") as file:
+                self.file = file
+                self.__printTreeToFileHelper(self.tree)
+
+    def __printTreeToFileHelper(self, current_node, indent='', nodeType='init', nameattr='value'):
+        if hasattr(current_node, nameattr):
+            name = getattr(current_node, nameattr)
+        else:
+            name = repr(current_node)
+
+        if nodeType == 'last':
+            start_shape = LEFT_SYMBOL + HORIZONTAL_SYMBOL * LEVEL_INDENT
+        elif nodeType == 'mid':
+            start_shape = VERTICAL_FORK + HORIZONTAL_SYMBOL * LEVEL_INDENT
+        else:
+            start_shape = ' '
+
+        line = '{0}{1}{2}'.format(indent, start_shape, name)
+        self.file.write(line + '\n')
+        nextIndent = '{0}{1}'.format(indent, VERTICAL_SYMBOL + ' ' * (len(start_shape)) if nodeType == 'mid' else ' ' * (len(start_shape) + 1))
+
+        if len(current_node.children) != 0:
+            if len(current_node.children) == 1:
+                self.__printTreeToFileHelper(current_node.children[0], nextIndent, 'last')
+            else:
+                for i in range(0, len(current_node.children) - 1):
+                    self.__printTreeToFileHelper(current_node.children[i], nextIndent, 'mid')
+
+                self.__printTreeToFileHelper(current_node.children[-1], nextIndent, 'last')
+
+    def printTree(self):
+        if self.tree is not None:
+            self.__printTreeHelper(self.tree)
 
     def __printTreeHelper(self, node, indent='', nodeType='init'):
         if nodeType == 'last':
@@ -264,16 +370,16 @@ class TreeBuilder:
         elif nodeType == 'mid':
             start_shape = VERTICAL_FORK + HORIZONTAL_SYMBOL * LEVEL_INDENT
         else:
-            start_shape = ''
+            start_shape = ' '
 
         print('{0}{1}{2}'.format(indent, start_shape, node.value))
-        nextIndent = '{0}{1}'.format(indent, VERTICAL_SYMBOL + ' ' * (len(start_shape) - 1) if nodeType == 'mid' else ' ' * len(start_shape))
+        nextIndent = '{0}{1}'.format(indent, VERTICAL_SYMBOL + ' ' * (len(start_shape)) if nodeType == 'mid' else ' ' * (len(start_shape) + 1))
 
         if len(node.children) != 0:
             if len(node.children) == 1:
                 self.__printTreeHelper(node.children[0], nextIndent, 'last')
             else:
                 for i in range(0, len(node.children) - 1):
-                    self.__printTreeHelper(node.children[0], nextIndent, 'mid')
+                    self.__printTreeHelper(node.children[i], nextIndent, 'mid')
 
                 self.__printTreeHelper(node.children[len(node.children) - 1], nextIndent, 'last')

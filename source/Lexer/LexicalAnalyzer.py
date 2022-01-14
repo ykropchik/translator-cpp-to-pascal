@@ -78,8 +78,16 @@ class LexicalAnalyzer:
             self.lexemeArray.append(self.LexemeArrayType('--', LexemeType.DECREMENT, lineNumber))
             return
 
-        if re.match('^[A-z_-]+[A-z_-|\d]*$', word):
-            self.lexemeArray.append(self.LexemeArrayType(word, LexemeType.NAME, lineNumber))
+        if re.match('^\".*\"$', word):
+            self.lexemeArray.append(self.LexemeArrayType(word, LexemeType.STRING_DATA, lineNumber))
+            return
+
+        if re.match('^\'.*\'$', word):
+            self.lexemeArray.append(self.LexemeArrayType(word, LexemeType.CHAR_DATA, lineNumber))
+            return
+
+        if re.match('^.*$', word):
+            self.lexemeArray.append(self.LexemeArrayType(word, LexemeType.WORD, lineNumber))
             return
 
         self.errors.append(self.ErrorType(lineNumber, word))

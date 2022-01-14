@@ -1,6 +1,5 @@
 import re
-from source.Parser.Earley import Production
-from source.Parser.Earley import Rule
+from source.Parser.Earley import *
 from enum import Enum
 import json
 
