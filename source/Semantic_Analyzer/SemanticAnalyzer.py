@@ -1,5 +1,6 @@
 from source.Parser.Earley import Node
 from source.Lexer.ErrorTypes import ErrorTypeSemantic
+from source.Semantic_Analyzer import ReservedWords
 
 class Variable(object):
     def __init__(self, type_v, name):
@@ -46,8 +47,7 @@ class VariableSemanticAnalyser:
         if typeCheck and typeCheck != newVariable.type_v:
             print(ErrorTypeSemantic.TYPE_MISMATCH + newVariable.name)
             errorCheck = True
-        reservedWords = []  # TODO: найти/объявить все зарезервированные слова
-        if newVariable.name in reservedWords:
+        if newVariable.name in ReservedWords.ReservedWords.data:
             print(ErrorTypeSemantic.USAGE_OF_RESERVED_IDENTIFIER + newVariable.name)
             errorCheck = True
         for variable in self.variables:
