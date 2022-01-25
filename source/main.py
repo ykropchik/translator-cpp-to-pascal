@@ -1,5 +1,6 @@
 from source.Lexer.LexicalAnalyzer import *
 from source.Parser.GrammarParser import *
+from source.Semantic_Analyzer.SemanticAnalyzer import VariableSemanticAnalyser
 from pptree import *
 
 if __name__ == '__main__':
@@ -35,6 +36,10 @@ if __name__ == '__main__':
     treeBuilder = TreeBuilder(earleyTable)
     treeBuilder.build_tree()
     treeBuilder.printTreeToFile()
+
+    print('_________________')
+    semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
+    semanticAnalyser.parse(treeBuilder.tree)
     # treeBuilder.printTree()
 
     # N = Rule("<выражение>", Production("13"))

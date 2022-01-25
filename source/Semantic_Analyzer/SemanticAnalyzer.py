@@ -17,21 +17,21 @@ class Function(object):
 
 
 class VariableSemanticAnalyser:
-    def __init__(self, tree):
-        self.variables = [],
+    def __init__(self, tree, *variables: Variable):
+        self.variables = list(variables),
         self.tree = tree,
         self.file = None
 
     def findExpressionType(self, node: Node):
         for part in node.children:
             if part.value.name == '<число>':
-                if part.value.production == '<целое число>':
+                if part.value.production.terms[0].name == '<целое число>':
                     return 'int'
-                if part.value.production == '- <целое число>':
+                if part.value.production.terms[0].name == '- <целое число>':
                     return 'int'
-                if part.value.production == '<вещественное число>':
+                if part.value.production.terms[0].name == '<вещественное число>':
                     return 'float'
-                if part.value.production == '- <вещественное число>':
+                if part.value.production.terms[0].name == '- <вещественное число>':
                     return 'float'
             if part.value.name == '<булево выражение>':
                 return 'bool'
@@ -39,27 +39,27 @@ class VariableSemanticAnalyser:
                 return 'char'
             # if part.value.name == '<вызов функции>':
             #     return 'func'
-        return ErrorTypeSemantic.UNFINISHED_EXPRESSION
+        return None
 
     def findName(self, node: Node):
         if node.value.dot_index == 1:
-            if node.value.production == '<начало имени>':
+            if hasattr(node.value.production.terms[0], 'name') and node.value.production.terms[0].name == '<начало имени>':
                 for part in node.children:
                     return self.findName(part)
-            if node.value.production == '<буква>':
+            if hasattr(node.value.production.terms[0], 'name') and node.value.production.terms[0].name == '<буква>':
                 for part in node.children:
                     return self.findName(part)
             if node.value.name == '<буква>':
-                return node.value.production
+                return node.value.production.terms[0]
         elif node.value.dot_index == 2:
             for child in node.children:
                 if child.value.name == '<продолжение имени>':
-                    nameContinuation = None
+                    nameContinuation = ''
                     for part in child.children:
-                        nameContinuation += part.value.production
+                        nameContinuation += part.value.production.terms[0]
                     return nameContinuation
 
-        return ErrorTypeSemantic.MISSING_VARIABLE_NAME
+        return None
 
     def findType(self, node: Node):
         for part in node.children:
@@ -68,7 +68,7 @@ class VariableSemanticAnalyser:
                     'short int' or part.value.name == 'unsigned short' or part.value.name == \
                     'unsigned int' or part.value.name == 'float' or part.value.name == 'double':
                 return part.value.name
-            return ErrorTypeSemantic.UNKNOWN_DATA_TYPE
+            return None
 
     # TODO:: Проверить работу find-функций
     def addVariable(self, node: Node):  # Input: value = <инициализация переменной> || <объявление переменной> ||
@@ -80,47 +80,47 @@ class VariableSemanticAnalyser:
             if part.value.name == '<выражение>':
                 typeCheck = self.findExpressionType(part)
             if part.value.name == '<имя переменной>':
-                newVariable.name += self.findName(part)
+                newVariable.name = self.findName(part)
             if part.value.name == '<тип данных>':
                 newVariable.type_v = self.findType(part)
-        if typeCheck and typeCheck != newVariable.type_v:
-            print(ErrorTypeSemantic.TYPE_MISMATCH + newVariable.name)
+        if typeCheck and typeCheck != newVariable.type_v and newVariable.name[0] is not None:
+            print(ErrorTypeSemantic.TYPE_MISMATCH.value + newVariable.name[0])
             errorCheck = True
-        if newVariable.name in ReservedWords.ReservedWords.data:
-            print(ErrorTypeSemantic.USAGE_OF_RESERVED_IDENTIFIER + newVariable.name)
+        if newVariable.name in ReservedWords.ReservedWords.data and newVariable.name[0] is not None:
+            print(ErrorTypeSemantic.USAGE_OF_RESERVED_IDENTIFIER.value + newVariable.name[0])
             errorCheck = True
-        for variable in self.variables:
+        for variable in self.variables[0]:
             if variable.name == newVariable.name:
-                print(ErrorTypeSemantic.MULTIPLE_VARIABLE_DECLARATION + newVariable.name)
+                print(ErrorTypeSemantic.MULTIPLE_VARIABLE_DECLARATION.value + newVariable.name)
                 errorCheck = True
         if errorCheck is None:
             # TODO: хз почему variables - это не list
             # Возможно PyCharm думает, что это обращение к атрибуту которого не существует.
-            self.variables.append(newVariable)
+            self.variables[0].append(newVariable)
 
     def updateVariableCheck(self, node: Node):  # Input: value = <обновление переменной>
         typeCheck = None
-        nameCheck = None
+        nameCheck = ''
         exist = None
         for part in node.children:
             if part.value.name == '<выражение>':
                 typeCheck = self.findExpressionType(part)
             if part.value.name == '<имя переменной>':
-                nameCheck = self.findName(part)
-        for variable in self.variables:
+                nameCheck += self.findName(part)
+        for variable in self.variables[0]:
             if variable.name == nameCheck:
                 exist = True
                 if variable.type_v != typeCheck:
-                    print(ErrorTypeSemantic.TYPE_MISMATCH + nameCheck)
+                    print(ErrorTypeSemantic.TYPE_MISMATCH.value + nameCheck)
         if exist is None:
-            print(ErrorTypeSemantic.UNDECLARED_VARIABLE + nameCheck)
+            print(ErrorTypeSemantic.UNDECLARED_VARIABLE.value + ' ' + nameCheck)
 
     def parse(self, node):
         if node.value.name == '<инициализация переменной>' or node.value.name == '<объявление переменной>':
             self.addVariable(node)
         if node.value.name == '<обновление переменной>':
             self.updateVariableCheck(node)
-        if not node.children:
+        if node.children:
             for nextNode in node.children:
                 self.parse(nextNode)
 
