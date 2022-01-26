@@ -43,9 +43,9 @@ if __name__ == '__main__':
         treeBuilder.build_tree()
         treeBuilder.printTreeToFile()
 
-        # print('_________________')
-        # semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
-        # semanticAnalyser.parse(treeBuilder.tree)
+        print('_________________')
+        semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
+        semanticAnalyser.parse(treeBuilder.tree)
     # treeBuilder.printTree()
 
     # N = Rule("<выражение>", Production("13"))
