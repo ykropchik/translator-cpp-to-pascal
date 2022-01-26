@@ -64,7 +64,7 @@ class RegexpRule(object):
 
 
 class State(object):
-    def __init__(self, name, production, dot_index, start_column, parent=None):
+    def __init__(self, name, production, dot_index, start_column):
         self.name = name
         self.production = production
         self.start_column = start_column
@@ -72,7 +72,6 @@ class State(object):
         self.dot_index = dot_index
         self.rules = [t for t in production if isinstance(t, Rule)]
         self.children = []
-        self.parent = parent
 
     def __repr__(self):
         terms = [str(p) for p in self.production]
@@ -132,10 +131,8 @@ class Column(object):
             self._unique.add(state)
             state.end_column = self
             self.states.append(state)
-            return state
-        for st in self._unique:
-            if st == state:
-                return st
+            return True
+        return False
 
     def print_(self, completedOnly=False):
         print("[%s] %r" % (self.index, self.token))
@@ -174,19 +171,19 @@ class Earley:
 
     def __predict(self, col, rule, state):
         for prod in rule.productions:
-            newState = State(rule.name, prod, 0, col, state)
-            child = col.add(newState)
+            newState = State(rule.name, prod, 0, col)
+            col.add(newState)
             state.addChild(newState)
 
     def __scan(self, col, state, token):
         if not isinstance(token, RegexpRule):
             if token == col.token.lexeme:
-                col.add(State(state.name, state.production, state.dot_index + 1, state.start_column, state))
+                col.add(State(state.name, state.production, state.dot_index + 1, state.start_column))
                 state.addChild(col[-1])
         else:
             match = re.search(token.regexp, col.token.lexeme)
             if match:
-                col.add(State(state.name, state.production, state.dot_index + 1, state.start_column, state))
+                col.add(State(state.name, state.production, state.dot_index + 1, state.start_column))
                 state.addChild(col[-1])
 
     def __complete(self, col, state):
@@ -197,10 +194,7 @@ class Earley:
             if not isinstance(term, Rule):
                 continue
             if term.name == state.name:
-                newState = State(st.name, st.production, st.dot_index + 1, st.start_column, st if st.parent is None else st.parent)
-                col.add(newState)
-                # if newState.completed():
-                #     newState.parent.addChild(newState)
+                col.add(State(st.name, st.production, st.dot_index + 1, st.start_column))
                 st.addChild(col[-1])
 
     def parse(self, lexemeArray):
@@ -263,6 +257,29 @@ class TreeBuilder:
         self.tree = None
         self.file = None
 
+    def build_tree_test(self, state):
+        return self.build_tree_helper([], state, len(state.rules) - 1, state.end_column)
+
+    def build_tree_helper(self, children, state, rule_index, end_column):
+        if rule_index < 0:
+            return [Node(state, children, state.start_column.token)]
+
+        rule = state.rules[rule_index]
+        outputs = []
+        for col in self.table[::-1]:
+            for st in col:
+                if st is state:
+                    break
+                if not st.completed() and st.name != rule.name:
+                    continue
+                test = self.build_tree_test(st)
+                for sub_tree in test:
+                    outputs.append([sub_tree])
+                if test:
+                    break
+
+        return outputs
+
     def build_tree(self):
         for state in self.table[-1]:
             if state.name == GAMMA_RULE and state.completed():
@@ -296,64 +313,19 @@ class TreeBuilder:
 
         return result
 
-    # def __reduce_node(self, state):
-    #     result = Node(state, [])
-    #     for child in state.children:
-    #         if child.children:
-    #             child = self.__reduce_node(child)
-    #
-    #         if isinstance(child, State):
-    #             if child.completed():
-    #                 if child.name == state.name and child.production == state.production:
-    #                     result.value = child
-    #                 else:
-    #                     result.children.append(child)
-    #         else:
-    #             result.children.append(child)
-    #
-    #     return result
-
-    # def __reduce_node(self, state):
-    #     result = Node(state, [])
-    #     for child in state.children:
-    #         if child.children:
-    #             child = self.__reduce_node(child)
-    #
-    #         if isinstance(child, Node):
-    #             if state.name == child.value.name and state.production == child.value.production:
-    #                 result.value = child.value
-    #                 if child.children:
-    #                     for childItem in child.children:
-    #                         result.children.append(childItem)
-    #             else:
-    #                 result.children.append(child)
-    #         else:
-    #             if state.name == child.name and state.production == child.production:
-    #                 result.value = child
-    #     return result
-
-    # def __reduce_node(self, state):
-    #     result = Node(state, [])
-    #     for child in state.children:
-    #         if not child.children:
-    #             if state.name == child.name and state.production == child.production:
-    #                 result.value = child
-    #         else:
-    #             newChild = self.__reduce_node(child)
-    #             # result.children.append(newChild)
-    #             if newChild.value.name == state.name and state.production == child.production:
-    #                 result.value = newChild.value
-    #                 for childItem in newChild.children:
-    #                     result.children.append(childItem)
-    #             else:
-    #                 result.children.append(newChild)
-    #     return result
-
     def printTreeToFile(self):
         if self.tree is not None:
             with open("Tree.txt", "w+", encoding="utf-8") as file:
                 self.file = file
                 self.__printTreeToFileHelper(self.tree)
+
+    def printTreeToFileTest(self, trees):
+        if trees is not None:
+            with open("Tree1.txt", "w+", encoding="utf-8") as file:
+                self.file = file
+                for tree in trees:
+                    self.__printTreeToFileHelper(tree)
+                    self.file.write('\n')
 
     def __printTreeToFileHelper(self, current_node, indent='', nodeType='init', nameattr='value'):
         if hasattr(current_node, nameattr):

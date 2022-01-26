@@ -33,6 +33,13 @@ if __name__ == '__main__':
 
     if parseResult:
         treeBuilder = TreeBuilder(earleyTable)
+        # for st in earleyTable[-1]:
+        #     if st.name == GAMMA_RULE and st.completed():
+        #         gammaRule = st
+        #
+        # testTree = treeBuilder.build_tree_test(gammaRule)
+        # treeBuilder.printTreeToFileTest(testTree)
+
         treeBuilder.build_tree()
         treeBuilder.printTreeToFile()
 

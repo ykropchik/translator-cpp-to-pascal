@@ -1,4 +1,5 @@
 void main() {
-    arrr = 1;
-    double a = 12;
+   for(int a = 0; a < 10; a ++) {
+   int a = 1;
+   }
 }
