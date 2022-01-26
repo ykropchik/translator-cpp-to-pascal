@@ -1,3 +1,3 @@
 void main() {
-    int a = 54;
+    arr = 54;
 }

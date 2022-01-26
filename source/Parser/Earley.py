@@ -251,8 +251,8 @@ class TreeBuilder:
     def build_tree(self):
         for state in self.table[-1]:
             if state.name == GAMMA_RULE and state.completed():
-                # self.tree = self.table[0].states[0]
-                self.tree = self.__reduce_node(self.table[0].states[0])
+                self.tree = self.table[0].states[0]
+                # self.tree = self.__reduce_node(self.table[0].states[0])
                 return
         else:
             raise ValueError("Invalid earley table")
@@ -330,7 +330,7 @@ class TreeBuilder:
 
     def printTreeToFile(self):
         if self.tree is not None:
-            with open("Tree.txt", "w+", encoding="utf-8") as file:
+            with open("Tree1.txt", "w+", encoding="utf-8") as file:
                 self.file = file
                 self.__printTreeToFileHelper(self.tree)
 
