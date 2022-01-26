@@ -1,14 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="3a9648af-f887-4383-a0a1-be9aa2566021" name="Changes" comment="Completed tree builder">
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/translator-cpp-to-pascal.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/translator-cpp-to-pascal.iml" afterDir="false" />
+    <list default="true" id="3a9648af-f887-4383-a0a1-be9aa2566021" name="Changes" comment="Added .gitignore">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/source/Lexer/LexemeType.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/Lexer/LexemeType.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/Lexer/LexicalAnalyzer.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/Lexer/LexicalAnalyzer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/Parser/Earley.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/Parser/Earley.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/Parser/GrammarParser.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/Parser/GrammarParser.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/source/Semantic_Analyzer/SemanticAnalyzer.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/Semantic_Analyzer/SemanticAnalyzer.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/grammar.json" beforeDir="false" afterPath="$PROJECT_DIR$/source/grammar.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/source/main.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/source/test.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/source/test.cpp" afterDir="false" />
@@ -128,6 +126,10 @@
       <workItem from="1641773992648" duration="7395000" />
       <workItem from="1641781801016" duration="121000" />
       <workItem from="1641861187946" duration="632000" />
+      <workItem from="1642159328738" duration="405000" />
+      <workItem from="1642588768164" duration="708000" />
+      <workItem from="1643107874039" duration="603000" />
+      <workItem from="1643169789253" duration="14077000" />
     </task>
     <task id="LOCAL-00001" summary="Init project">
       <created>1632265424332</created>
@@ -171,7 +173,21 @@
       <option name="project" value="LOCAL" />
       <updated>1639298448364</updated>
     </task>
-    <option name="localTasksCounter" value="7" />
+    <task id="LOCAL-00007" summary="Tree builder fixes">
+      <created>1642159375022</created>
+      <option name="number" value="00007" />
+      <option name="presentableId" value="LOCAL-00007" />
+      <option name="project" value="LOCAL" />
+      <updated>1642159375022</updated>
+    </task>
+    <task id="LOCAL-00008" summary="Added .gitignore">
+      <created>1643170276472</created>
+      <option name="number" value="00008" />
+      <option name="presentableId" value="LOCAL-00008" />
+      <option name="project" value="LOCAL" />
+      <updated>1643170276472</updated>
+    </task>
+    <option name="localTasksCounter" value="9" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -196,10 +212,29 @@
     <MESSAGE value="Create beta lexical analyzer" />
     <MESSAGE value="Added __checkBySymbol method" />
     <MESSAGE value="Realized earley algorithm" />
-    <option name="LAST_COMMIT_MESSAGE" value="Realized earley algorithm" />
+    <MESSAGE value="Tree builder fixes" />
+    <MESSAGE value="Added .gitignore" />
+    <option name="LAST_COMMIT_MESSAGE" value="Added .gitignore" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint suspend="THREAD" type="python-line">
+          <condition expression="result.value.completed() and result.value.name == &quot;&lt;инструкция&gt;&quot;" language="Python" />
+          <url>file://$PROJECT_DIR$/source/Parser/Earley.py</url>
+          <line>296</line>
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/source/Parser/Earley.py</url>
+          <line>280</line>
+          <option name="timeStamp" value="21" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
-    <SUITE FILE_PATH="coverage/main_py$main.coverage" NAME="main Coverage Results" MODIFIED="1641781624920" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/source" />
+    <SUITE FILE_PATH="coverage/main_py$main.coverage" NAME="main Coverage Results" MODIFIED="1643184451852" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/source" />
     <SUITE FILE_PATH="coverage/main_py$__main__.coverage" NAME="main Coverage Results" MODIFIED="1633131047841" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/source" />
   </component>
 </project>

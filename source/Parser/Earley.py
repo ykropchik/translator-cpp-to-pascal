@@ -1,3 +1,5 @@
+import re
+
 VERTICAL_SYMBOL = "│"
 VERTICAL_FORK = "├"
 HORIZONTAL_SYMBOL = "─"
@@ -51,6 +53,14 @@ class Rule(object):
 
     def add(self, *productions):
         self.productions.extend(productions)
+
+
+class RegexpRule(object):
+    def __init__(self, regexp):
+        self.regexp = regexp
+
+    def __repr__(self):
+        return self.regexp
 
 
 class State(object):
@@ -122,8 +132,10 @@ class Column(object):
             self._unique.add(state)
             state.end_column = self
             self.states.append(state)
-            return True
-        return False
+            return state
+        for st in self._unique:
+            if st == state:
+                return st
 
     def print_(self, completedOnly=False):
         print("[%s] %r" % (self.index, self.token))
@@ -136,19 +148,15 @@ class Column(object):
 
 
 class Node(object):
-    def __init__(self, value, children):
-        self.value = value
+    def __init__(self, value, children, lexeme):
+        self.state = value
         self.children = children
+        self.lexeme = lexeme
 
     def __repr__(self):
-        terms = [str(p) for p in self.value.production]
-        terms.insert(self.value.dot_index, u"·")
-        return "%-5s -> %-16s" % (self.value.name, " ".join(terms))
-
-    def print_(self, level=0):
-        print("│" + " " * level + " " + str(self.value))
-        for child in self.children:
-            child.print_(level + 1)
+        terms = [str(p) for p in self.state.production]
+        terms.insert(self.state.dot_index, u"·")
+        return "{0} -> {1}         Lexeme: {2}".format(self.state.name, " ".join(terms), self.lexeme)
 
 
 class Earley:
@@ -166,15 +174,20 @@ class Earley:
 
     def __predict(self, col, rule, state):
         for prod in rule.productions:
-            col.add(State(rule.name, prod, 0, col))
-            state.addChild(col[-1])
+            newState = State(rule.name, prod, 0, col, state)
+            child = col.add(newState)
+            state.addChild(newState)
 
     def __scan(self, col, state, token):
-        if token != col.token:
-            return
-
-        col.add(State(state.name, state.production, state.dot_index + 1, state.start_column, state))
-        state.addChild(col[-1])
+        if not isinstance(token, RegexpRule):
+            if token == col.token.lexeme:
+                col.add(State(state.name, state.production, state.dot_index + 1, state.start_column, state))
+                state.addChild(col[-1])
+        else:
+            match = re.search(token.regexp, col.token.lexeme)
+            if match:
+                col.add(State(state.name, state.production, state.dot_index + 1, state.start_column, state))
+                state.addChild(col[-1])
 
     def __complete(self, col, state):
         if not state.completed():
@@ -184,7 +197,10 @@ class Earley:
             if not isinstance(term, Rule):
                 continue
             if term.name == state.name:
-                col.add(State(st.name, st.production, st.dot_index + 1, st.start_column, st if st.parent is None else st.parent))
+                newState = State(st.name, st.production, st.dot_index + 1, st.start_column, st if st.parent is None else st.parent)
+                col.add(newState)
+                # if newState.completed():
+                #     newState.parent.addChild(newState)
                 st.addChild(col[-1])
 
     def parse(self, lexemeArray):
@@ -211,7 +227,6 @@ class Earley:
         else:
             return False
 
-
     def printTable(self, type="ver"):
         maxRow = 0
         colNum = 0
@@ -235,7 +250,7 @@ class Earley:
         else:
             i = 0
             for col in self.table:
-                print(HORIZONTAL_SYMBOL * 15, " E_{0} ".format(i), HORIZONTAL_SYMBOL * 15)
+                print(HORIZONTAL_SYMBOL * 10, " E_{0} - token: {1}".format(i, col.token), HORIZONTAL_SYMBOL * 10)
                 for state in col.states:
                     print(str(state).ljust(len(str(state))))
                 i += 1
@@ -251,14 +266,19 @@ class TreeBuilder:
     def build_tree(self):
         for state in self.table[-1]:
             if state.name == GAMMA_RULE and state.completed():
-                self.tree = self.table[0].states[0]
-                # self.tree = self.__reduce_node(self.table[0].states[0])
+                # self.tree = self.table[0].states[0]
+                self.tree = self.__reduce_node(self.table[0].states[0])
                 return
         else:
             raise ValueError("Invalid earley table")
 
     def __reduce_node(self, state):
-        result = Node(state, [])
+        if state.end_column:
+            lexeme = state.end_column.token
+        else:
+            lexeme = None
+
+        result = Node(state, [], lexeme)
 
         if not state.children:
             return result
@@ -266,11 +286,12 @@ class TreeBuilder:
         for child in state.children:
             child = self.__reduce_node(child)
 
-            if child.value.name == state.name and child.value.production == state.production and child.value.completed():
-                result.value = child.value
+            if child.state.name == state.name and child.state.production == state.production and child.state.completed():
+                result.state = child.state
+                result.lexeme = child.state.end_column.token
                 result.children.extend(child.children)
-            elif child.value.completed():
-                if (child.value.rules and child.children) or not child.value.rules:
+            elif child.state.completed():
+                if (child.state.rules and child.children) or not child.state.rules:
                     result.children.append(child)
 
         return result
@@ -330,7 +351,7 @@ class TreeBuilder:
 
     def printTreeToFile(self):
         if self.tree is not None:
-            with open("Tree1.txt", "w+", encoding="utf-8") as file:
+            with open("Tree.txt", "w+", encoding="utf-8") as file:
                 self.file = file
                 self.__printTreeToFileHelper(self.tree)
 
@@ -372,7 +393,7 @@ class TreeBuilder:
         else:
             start_shape = ' '
 
-        print('{0}{1}{2}'.format(indent, start_shape, node.value))
+        print('{0}{1}{2}'.format(indent, start_shape, node.state))
         nextIndent = '{0}{1}'.format(indent, VERTICAL_SYMBOL + ' ' * (len(start_shape)) if nodeType == 'mid' else ' ' * (len(start_shape) + 1))
 
         if len(node.children) != 0:

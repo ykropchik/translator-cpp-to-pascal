@@ -8,7 +8,7 @@ if __name__ == '__main__':
 
     lexicalAnalyzer = LexicalAnalyzer('test.cpp')
     lexicalAnalyzer.startParsing()
-    # lexicalAnalyzer.printLexemes()
+    lexicalAnalyzer.printLexemes()
     # lexicalAnalyzer.printErrors()
 
     print()
@@ -27,19 +27,18 @@ if __name__ == '__main__':
             result.extend(list(item.lexeme)) if item.lexemeType in temp else result.append(item.lexeme)
         return result
 
-    if earley.parse(convertArray(lexicalAnalyzer.lexemeArray)):
-        earleyTable = earley.table
-        earley.printTable()
-    else:
-        earleyTable = []
+    parseResult = earley.parse(lexicalAnalyzer.lexemeArray)
+    earley.printTable()
+    earleyTable = earley.table
 
-    treeBuilder = TreeBuilder(earleyTable)
-    treeBuilder.build_tree()
-    treeBuilder.printTreeToFile()
+    if parseResult:
+        treeBuilder = TreeBuilder(earleyTable)
+        treeBuilder.build_tree()
+        treeBuilder.printTreeToFile()
 
-    print('_________________')
-    semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
-    semanticAnalyser.parse(treeBuilder.tree)
+        # print('_________________')
+        # semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
+        # semanticAnalyser.parse(treeBuilder.tree)
     # treeBuilder.printTree()
 
     # N = Rule("<выражение>", Production("13"))

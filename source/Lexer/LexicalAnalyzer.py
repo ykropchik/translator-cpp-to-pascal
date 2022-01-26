@@ -4,13 +4,19 @@ import re
 
 
 class LexicalAnalyzer:
-    class LexemeArrayType:
+    class LexemeArrayType(object):
         def __init__(self, lexeme, lexemeType, lineNumber):
             self.lexeme = lexeme
             self.lexemeType = lexemeType
             self.lineNumber = lineNumber
 
-    class ErrorType:
+        def __repr__(self):
+            return '{0} - {1}. Line: {2}'.format(self.lexemeType, self.lexeme, self.lineNumber)
+
+        def __str__(self):
+            return self.lexeme
+
+    class ErrorType(object):
         def __init__(self, lineNumber, word):
             self.lineNumber = lineNumber
             self.word = word

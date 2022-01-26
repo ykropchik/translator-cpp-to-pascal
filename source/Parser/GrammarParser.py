@@ -101,7 +101,11 @@ class GrammarParser:
                         if existRule:
                             prodAccum.add(existRule)
                         else:
-                            prodAccum.add(elem)
+                            match = re.search('reg{(.+)}', elem)
+                            if match:
+                                prodAccum.add(RegexpRule(match.group(1)))
+                            else:
+                                prodAccum.add(elem)
                     workingRule.add(prodAccum)
 
 
