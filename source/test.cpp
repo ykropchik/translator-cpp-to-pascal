@@ -1,3 +1,4 @@
 void main() {
-    arr = 54;
+    arrr = 5;
+    float b = 123;
 }
