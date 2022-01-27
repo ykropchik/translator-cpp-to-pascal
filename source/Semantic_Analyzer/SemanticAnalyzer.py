@@ -102,16 +102,16 @@ class VariableSemanticAnalyser:
                 newVariable.type_v = part.lexeme.lexeme
         if typeCheck and typeCheck != newVariable.type_v and newVariable.name[0] is not None:
             print(SemanticError(node.lexeme.lineNumber, newVariable.name,
-                                ErrorTypeSemantic.TYPE_MISMATCH.value).__str__())
+                                ErrorTypeSemantic.TYPE_MISMATCH.value))
             errorCheck = True
         if newVariable.name in ReservedWords.ReservedWords.data and newVariable.name[0] is not None:
             print(SemanticError(node.lexeme.lineNumber, newVariable.name,
-                                ErrorTypeSemantic.USAGE_OF_RESERVED_IDENTIFIER.value).__str__())
+                                ErrorTypeSemantic.USAGE_OF_RESERVED_IDENTIFIER.value))
             errorCheck = True
         for variable in self.variables[0]:
             if variable.name == newVariable.name:
                 print(SemanticError(node.lexeme.lineNumber, newVariable.name,
-                                    ErrorTypeSemantic.MULTIPLE_VARIABLE_DECLARATION.value).__str__())
+                                    ErrorTypeSemantic.MULTIPLE_VARIABLE_DECLARATION.value))
                 errorCheck = True
         if errorCheck is None:
             # TODO: хз почему variables - это не list
@@ -131,9 +131,9 @@ class VariableSemanticAnalyser:
             if variable.name == nameCheck:
                 exist = True
                 if variable.type_v != typeCheck:
-                    print(SemanticError(node.lexeme.lineNumber, nameCheck, ErrorTypeSemantic.TYPE_MISMATCH.value).__str__())
+                    print(SemanticError(node.lexeme.lineNumber, nameCheck, ErrorTypeSemantic.TYPE_MISMATCH.value))
         if exist is None:
-            print(SemanticError(node.lexeme.lineNumber, nameCheck, ErrorTypeSemantic.UNDECLARED_VARIABLE.value).__str__())
+            print(SemanticError(node.lexeme.lineNumber, nameCheck, ErrorTypeSemantic.UNDECLARED_VARIABLE.value))
 
     def parse(self, node):
         if node.state.name == '<инициализация переменной>' or node.state.name == '<объявление переменной>':
