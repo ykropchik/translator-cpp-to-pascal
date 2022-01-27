@@ -37,6 +37,8 @@ class VariableSemanticAnalyser:
                 return 'bool'
             if part.state.name == '\'<буква>\'':
                 return 'char'
+            if part.state.name == '<алгебраическое выражение>':
+                return 'int'
             # if part.value.name == '<вызов функции>':
             #     return 'func'
         return None
@@ -68,6 +70,8 @@ class VariableSemanticAnalyser:
                     'short int' or part.state.name == 'unsigned short' or part.state.name == \
                     'unsigned int' or part.state.name == 'float' or part.state.name == 'double':
                 return part.state.name
+            elif part.state.production.terms[0].name == '<алгебраическое выражение>':
+                return 'int'
             return None
 
     # TODO:: Проверить работу find-функций
@@ -80,18 +84,18 @@ class VariableSemanticAnalyser:
             if part.state.name == '<выражение>':
                 typeCheck = self.findExpressionType(part)
             if part.state.name == '<имя переменной>':
-                newVariable.name = self.findName(part)
+                newVariable.name = part.lexeme.lexeme
             if part.state.name == '<тип данных>':
-                newVariable.type_v = self.findType(part)
+                newVariable.type_v = part.lexeme.lexeme
         if typeCheck and typeCheck != newVariable.type_v and newVariable.name[0] is not None:
-            print(ErrorTypeSemantic.TYPE_MISMATCH.value + newVariable.name[0])
+            print(ErrorTypeSemantic.TYPE_MISMATCH.value + ' ' + newVariable.name[0])
             errorCheck = True
         if newVariable.name in ReservedWords.ReservedWords.data and newVariable.name[0] is not None:
-            print(ErrorTypeSemantic.USAGE_OF_RESERVED_IDENTIFIER.value + newVariable.name[0])
+            print(ErrorTypeSemantic.USAGE_OF_RESERVED_IDENTIFIER.value + ' ' + newVariable.name)
             errorCheck = True
         for variable in self.variables[0]:
             if variable.name == newVariable.name:
-                print(ErrorTypeSemantic.MULTIPLE_VARIABLE_DECLARATION.value + newVariable.name)
+                print(ErrorTypeSemantic.MULTIPLE_VARIABLE_DECLARATION.value + ' ' + newVariable.name)
                 errorCheck = True
         if errorCheck is None:
             # TODO: хз почему variables - это не list
@@ -106,7 +110,7 @@ class VariableSemanticAnalyser:
             if part.state.name == '<выражение>':
                 typeCheck = self.findExpressionType(part)
             if part.state.name == '<имя переменной>':
-                nameCheck += self.findName(part)
+                nameCheck = part.lexeme.lexeme
         for variable in self.variables[0]:
             if variable.name == nameCheck:
                 exist = True
