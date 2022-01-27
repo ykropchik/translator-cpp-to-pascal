@@ -15,6 +15,19 @@ class Function(object):
         self.name = name,
         self.params = params
 
+class SemanticError:
+    def __init__(self, line, name, errorName):
+        self.errorName = errorName
+        self.line = line
+        self.name = name
+        self.assumptions = set()
+
+    def addAssumption(self, assumption):
+        self.assumptions.add(assumption)
+
+    def __str__(self):
+        return "{0} | Error: {1} \"{2}\""\
+            .format(self.line, self.errorName, self.name)
 
 class VariableSemanticAnalyser:
     def __init__(self, tree, *variables: Variable):
@@ -88,14 +101,17 @@ class VariableSemanticAnalyser:
             if part.state.name == '<тип данных>':
                 newVariable.type_v = part.lexeme.lexeme
         if typeCheck and typeCheck != newVariable.type_v and newVariable.name[0] is not None:
-            print(ErrorTypeSemantic.TYPE_MISMATCH.value + ' ' + newVariable.name[0])
+            print(SemanticError(node.lexeme.lineNumber, newVariable.name,
+                                ErrorTypeSemantic.TYPE_MISMATCH.value).__str__())
             errorCheck = True
         if newVariable.name in ReservedWords.ReservedWords.data and newVariable.name[0] is not None:
-            print(ErrorTypeSemantic.USAGE_OF_RESERVED_IDENTIFIER.value + ' ' + newVariable.name)
+            print(SemanticError(node.lexeme.lineNumber, newVariable.name,
+                                ErrorTypeSemantic.USAGE_OF_RESERVED_IDENTIFIER.value).__str__())
             errorCheck = True
         for variable in self.variables[0]:
             if variable.name == newVariable.name:
-                print(ErrorTypeSemantic.MULTIPLE_VARIABLE_DECLARATION.value + ' ' + newVariable.name)
+                print(SemanticError(node.lexeme.lineNumber, newVariable.name,
+                                    ErrorTypeSemantic.MULTIPLE_VARIABLE_DECLARATION.value).__str__())
                 errorCheck = True
         if errorCheck is None:
             # TODO: хз почему variables - это не list
@@ -115,9 +131,9 @@ class VariableSemanticAnalyser:
             if variable.name == nameCheck:
                 exist = True
                 if variable.type_v != typeCheck:
-                    print(ErrorTypeSemantic.TYPE_MISMATCH.value + nameCheck)
+                    print(SemanticError(node.lexeme.lineNumber, nameCheck, ErrorTypeSemantic.TYPE_MISMATCH.value).__str__())
         if exist is None:
-            print(ErrorTypeSemantic.UNDECLARED_VARIABLE.value + ' ' + nameCheck)
+            print(SemanticError(node.lexeme.lineNumber, nameCheck, ErrorTypeSemantic.UNDECLARED_VARIABLE.value).__str__())
 
     def parse(self, node):
         if node.state.name == '<инициализация переменной>' or node.state.name == '<объявление переменной>':
