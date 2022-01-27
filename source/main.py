@@ -1,15 +1,14 @@
 from source.Lexer.LexicalAnalyzer import *
 from source.Parser.GrammarParser import *
 from source.Semantic_Analyzer.SemanticAnalyzer import VariableSemanticAnalyser
-from pptree import *
 
 if __name__ == '__main__':
     print("-" * 10, "Lexer", "-" * 10)
 
     lexicalAnalyzer = LexicalAnalyzer('test.cpp')
     lexicalAnalyzer.startParsing()
-    lexicalAnalyzer.printLexemes()
-    # lexicalAnalyzer.printErrors()
+    # lexicalAnalyzer.printLexemes()
+    lexicalAnalyzer.printErrors()
 
     print()
     print("-"*10, "Grammar", "-"*10)
@@ -20,15 +19,9 @@ if __name__ == '__main__':
 
     earley = Earley(grammarParser.rules, "<программа>")
 
-    def convertArray(array):
-        temp = (LexemeType.WORD, LexemeType.INT_NUMBER, LexemeType.REAL_NUMBER, LexemeType.EXPONENTIAL_NUMBER)
-        result = []
-        for item in array:
-            result.extend(list(item.lexeme)) if item.lexemeType in temp else result.append(item.lexeme)
-        return result
-
     parseResult = earley.parse(lexicalAnalyzer.lexemeArray)
-    earley.printTable()
+    # earley.printTable()
+    earley.printError()
     earleyTable = earley.table
 
     if parseResult:

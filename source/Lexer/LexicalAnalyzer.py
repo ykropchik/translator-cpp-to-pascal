@@ -112,6 +112,8 @@ class LexicalAnalyzer:
                         self.__checkBySymbol(word, lineNumber)
 
     def printErrors(self):
+        if not self.errors:
+            print("No errors found.")
         for error in self.errors:
             print("Line: %s - Word: %s" % (error.lineNumber, error.word))
 

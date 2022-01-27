@@ -1,5 +1,8 @@
 import re
 
+from source.Lexer.LexemeType import LexemeType
+from source.Lexer.LexicalAnalyzer import LexicalAnalyzer
+
 VERTICAL_SYMBOL = "│"
 VERTICAL_FORK = "├"
 HORIZONTAL_SYMBOL = "─"
@@ -60,6 +63,9 @@ class RegexpRule(object):
         self.regexp = regexp
 
     def __repr__(self):
+        return self.regexp
+
+    def __str__(self):
         return self.regexp
 
 
@@ -157,10 +163,23 @@ class Node(object):
 
 
 class Earley:
+    class SemanticError:
+        def __init__(self, token):
+            self.token = token
+            self.assumptions = []
+
+        def addAssumption(self, assumption):
+            self.assumptions.append(assumption)
+
+        def __str__(self):
+            return "{0} | Error: expected {1} instead of \"{2}\""\
+                .format(self.token.lineNumber, " or ".join(map(lambda x: "\'" + str(x) + "\'", self.assumptions)), self.token.lexeme)
+
     def __init__(self, rules, axiom):
         self.rules = rules
         self.axiom = None
         self.table = None
+        self.semanticError = None
 
         for rule in rules:
             if rule.name == axiom:
@@ -168,6 +187,25 @@ class Earley:
 
         if self.axiom is None:
             raise ValueError("Invalid axiom")
+
+    def findErrors(self):
+        lastNonEmptyCol = None
+        lastNonEmptyColNumber = None
+        for i, col in enumerate(self.table[::-1]):
+            if col:
+                lastNonEmptyCol = col
+                lastNonEmptyColNumber = len(self.table) - i - 1
+                break
+
+        if lastNonEmptyColNumber == len(self.table) - 1:
+            self.semanticError = self.SemanticError(LexicalAnalyzer.LexemeArrayType("END OF FILE", LexemeType.EOF ,lastNonEmptyCol.token.lineNumber))
+        else:
+            self.semanticError = self.SemanticError(self.table[lastNonEmptyColNumber + 1].token)
+
+        for st in lastNonEmptyCol:
+            if not st.completed() and not isinstance(st.production[st.dot_index], Rule):
+                self.semanticError.addAssumption(st.production[st.dot_index])
+
 
     def __predict(self, col, rule, state):
         for prod in rule.productions:
@@ -219,7 +257,14 @@ class Earley:
             if st.name == GAMMA_RULE and st.completed():
                 return True
         else:
+            self.findErrors()
             return False
+
+    def printError(self):
+        if self.semanticError is None:
+            print("Semantic errors not found.")
+        else:
+            print(self.semanticError)
 
     def printTable(self, type="ver"):
         maxRow = 0

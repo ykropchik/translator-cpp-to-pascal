@@ -84,6 +84,8 @@ class LexemeType(Enum):
 
     UNDEFINED = 'LEXEME-UNDEFINED'
 
+    EOF = 'LEXEME-END_OF_FILE'
+
 
 DictionaryOfLexemes = {
     # Operators
