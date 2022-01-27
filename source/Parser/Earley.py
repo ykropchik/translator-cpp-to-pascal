@@ -188,6 +188,9 @@ class Earley:
         if self.axiom is None:
             raise ValueError("Invalid axiom")
 
+    def isOk(self):
+        return not self.semanticError is None
+
     def findErrors(self):
         lastNonEmptyCol = None
         lastNonEmptyColNumber = None

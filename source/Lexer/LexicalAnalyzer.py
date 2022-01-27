@@ -100,6 +100,11 @@ class LexicalAnalyzer:
         self.lexemeArray.append(self.LexemeArrayType(word, LexemeType.UNDEFINED, lineNumber))
 
     def startParsing(self):
+        if not self.inputFile.read(1):
+            return False
+        else:
+            self.inputFile.seek(0)
+
         lineNumber = 0
         for line in self.inputFile.readlines():
             lineNumber += 1
@@ -111,6 +116,11 @@ class LexicalAnalyzer:
                     except KeyError as e:
                         self.__checkBySymbol(word, lineNumber)
 
+        if self.errors:
+            return False
+        else:
+            return True
+
     def printErrors(self):
         if not self.errors:
             print("No errors found.")
@@ -118,9 +128,10 @@ class LexicalAnalyzer:
             print("Line: %s - Word: %s" % (error.lineNumber, error.word))
 
     def printLexemes(self):
-        width = max(map(lambda lexeme: len(lexeme.lexemeType.name), self.lexemeArray)) + 1
-        for lexeme in self.lexemeArray:
-            print("Line: %s - [ %s ] - %s" % (lexeme.lineNumber, lexeme.lexemeType.name.rjust(width), lexeme.lexeme))
+        if self.lexemeArray:
+            width = max(map(lambda lexeme: len(lexeme.lexemeType.name), self.lexemeArray)) + 1
+            for lexeme in self.lexemeArray:
+                print("Line: %s - [ %s ] - %s" % (lexeme.lineNumber, lexeme.lexemeType.name.rjust(width), lexeme.lexeme))
 
     def returnLexemes(self, testCaseNumber):
         return self.lexemeArray[testCaseNumber].lexemeType.name
