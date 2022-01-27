@@ -166,10 +166,10 @@ class Earley:
     class SemanticError:
         def __init__(self, token):
             self.token = token
-            self.assumptions = []
+            self.assumptions = set()
 
         def addAssumption(self, assumption):
-            self.assumptions.append(assumption)
+            self.assumptions.add(assumption)
 
         def __str__(self):
             return "{0} | Error: expected {1} instead of \"{2}\""\
