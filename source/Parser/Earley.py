@@ -12,6 +12,15 @@ LEVEL_INDENT = 2
 GAMMA_RULE = u"GAMMA"
 
 
+class TreeNode(object):
+    def __init__(self, state, lexeme):
+        self.rule = "%-5s -> %-16s" % (state.name, " ".join([str(p) for p in state.production]))
+        self.lexeme = lexeme
+        self.children = []
+
+    def addChild(self, child):
+        self.children.append(child)
+
 class Production(object):
     def __init__(self, *terms):
         self.terms = terms
@@ -300,33 +309,83 @@ class Earley:
 
 
 class TreeBuilder:
-    def __init__(self, table):
+    def __init__(self, table, rules):
         self.table = table
+        self.rules = rules
+        self.pi = []
         self.tree = None
         self.file = None
 
-    def build_tree_test(self, state):
-        return self.build_tree_helper([], state, len(state.rules) - 1, state.end_column)
+    # def build_tree_test(self, state):
+    #     return self.build_tree_helper([], state, len(state.rules) - 1, state.end_column)
+    #
+    # def build_tree_helper(self, children, state, rule_index, end_column):
+    #     if rule_index < 0:
+    #         return [Node(state, children, state.start_column.token)]
+    #
+    #     rule = state.rules[rule_index]
+    #     outputs = []
+    #     for col in self.table[::-1]:
+    #         for st in col:
+    #             if st is state:
+    #                 break
+    #             if not st.completed() and st.name != rule.name:
+    #                 continue
+    #             test = self.build_tree_test(st)
+    #             for sub_tree in test:
+    #                 outputs.append([sub_tree])
+    #             if test:
+    #                 break
+    #
+    #     return outputs
 
-    def build_tree_helper(self, children, state, rule_index, end_column):
-        if rule_index < 0:
-            return [Node(state, children, state.start_column.token)]
+    def build_tree_test(self):
+        for state in self.table[-1]:
+            if state.name == GAMMA_RULE and state.completed():
+                self.tree = self.build_tree_test_helper(self.table[0].states[0], len(self.table) - 1)
+                return
+        else:
+            raise ValueError("Invalid earley table")
 
-        rule = state.rules[rule_index]
-        outputs = []
-        for col in self.table[::-1]:
-            for st in col:
-                if st is state:
-                    break
-                if not st.completed() and st.name != rule.name:
-                    continue
-                test = self.build_tree_test(st)
-                for sub_tree in test:
-                    outputs.append([sub_tree])
-                if test:
-                    break
+    def build_tree_test_helper(self, state, j):
+        terms = state.production
+        k = len(terms) - 1
+        c = j
 
-        return outputs
+        result = TreeNode(state, self.table[j].token)
+
+        while k > -1:
+            if isinstance(terms[k], Rule):
+                nextStates = self.search_states(state.production[k].name, c, state.start_column)
+                k -= 1
+                if len(nextStates) > 0:
+                    result.addChild(self.build_tree_test_helper(nextStates[0], c))
+                    c = nextStates[0].start_column.index
+            else:
+                k -= 1
+                c -= 1
+
+        return result
+
+    def search_states(self, x, columnNumber, i):
+        subResult = []
+        for state in self.table[columnNumber].states:
+            if state.name == x and state.completed():
+                subResult.append(state)
+
+        result = []
+        for state in subResult:
+            if self.search_states_helper(state.name, state.start_column, i):
+                result.append(state)
+
+        return result
+
+    def search_states_helper(self, x, column, i):
+        for state in column.states:
+            if not state.completed() and isinstance(state.production[state.dot_index], Rule) and state.production[state.dot_index].name == x and state.start_column == i:
+                return True
+
+        return False
 
     def build_tree(self):
         for state in self.table[-1]:
@@ -375,11 +434,8 @@ class TreeBuilder:
                     self.__printTreeToFileHelper(tree)
                     self.file.write('\n')
 
-    def __printTreeToFileHelper(self, current_node, indent='', nodeType='init', nameattr='value'):
-        if hasattr(current_node, nameattr):
-            name = getattr(current_node, nameattr)
-        else:
-            name = repr(current_node)
+    def __printTreeToFileHelper(self, current_node, indent='', nodeType='init'):
+        name = current_node.rule + ' Lexeme: ' + current_node.lexeme.lexeme
 
         if nodeType == 'last':
             start_shape = LEFT_SYMBOL + HORIZONTAL_SYMBOL * LEVEL_INDENT

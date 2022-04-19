@@ -21,18 +21,21 @@ if __name__ == '__main__':
         earley = Earley(grammarParser.rules, "<программа>")
 
         earleyParseResult = earley.parse(lexicalAnalyzer.lexemeArray)
-        # earley.printTable()
+        earley.printTable()
         earley.printError()
         earleyTable = earley.table
 
-        if earleyParseResult:
-            treeBuilder = TreeBuilder(earleyTable)
+        # exit(-1)
 
-            treeBuilder.build_tree()
+        if earleyParseResult:
+            treeBuilder = TreeBuilder(earleyTable, grammarParser.rules)
+
+            # treeBuilder.build_tree()
+            treeBuilder.build_tree_test()
             treeBuilder.printTreeToFile()
 
-            print('_________________')
-            semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
-            semanticAnalyser.parse(treeBuilder.tree)
+            # print('_________________')
+            # semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
+            # semanticAnalyser.parse(treeBuilder.tree)
 
     print()
