@@ -13,8 +13,8 @@ GAMMA_RULE = u"GAMMA"
 
 
 class TreeNode(object):
-    def __init__(self, state, lexeme):
-        self.rule = "%-5s -> %-16s" % (state.name, " ".join([str(p) for p in state.production]))
+    def __init__(self, rule, lexeme):
+        self.rule = rule
         self.lexeme = lexeme
         self.children = []
 
@@ -352,7 +352,7 @@ class TreeBuilder:
         k = len(terms) - 1
         c = j
 
-        result = TreeNode(state, self.table[j].token)
+        result = TreeNode(Rule(state.name, state.production), self.table[j].token)
 
         while k > -1:
             if isinstance(terms[k], Rule):
@@ -435,7 +435,7 @@ class TreeBuilder:
                     self.file.write('\n')
 
     def __printTreeToFileHelper(self, current_node, indent='', nodeType='init'):
-        name = current_node.rule + ' Lexeme: ' + current_node.lexeme.lexeme
+        name = repr(current_node.rule) + ' Lexeme: ' + current_node.lexeme.lexeme
 
         if nodeType == 'last':
             start_shape = LEFT_SYMBOL + HORIZONTAL_SYMBOL * LEVEL_INDENT
