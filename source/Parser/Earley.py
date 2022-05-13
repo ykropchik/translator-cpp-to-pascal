@@ -19,7 +19,8 @@ class TreeNode(object):
         self.children = []
 
     def addChild(self, child):
-        self.children.append(child)
+        self.children = [child] + self.children
+
 
 class Production(object):
     def __init__(self, *terms):
