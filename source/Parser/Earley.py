@@ -18,6 +18,9 @@ class TreeNode(object):
         self.lexeme = lexeme
         self.children = []
 
+    def __repr__(self):
+        return str(self.rule)
+
     def addChild(self, child):
         self.children = [child] + self.children
 
@@ -280,34 +283,38 @@ class Earley:
         else:
             print(self.semanticError)
 
-    def printTable(self, tableType="ver"):
+    def printTableToFile(self, tableType="ver"):
+        with open("EarleyTable.txt", "w+", encoding="utf-8") as file:
+            self.__printTableToFileHelper(file, tableType)
+
+    def __printTableToFileHelper(self, file, tableType="ver"):
         maxRow = 0
         colNum = 0
         if tableType == "hor":
             for col in self.table:
-                print("| %135s " % str(colNum).center(135), end="")
+                file.write("| %135s " % str(colNum).center(135))
                 colNum += 1
                 if len(col.states) > maxRow:
                     maxRow = len(col.states)
 
-            print("|", end="\n")
+            file.write("|\n")
 
             for i in range(0, maxRow):
                 for col in self.table:
                     if i >= len(col.states):
                         break
                     else:
-                        print("| %135s " % str(col.states[i]).center(135), end="")
+                        file.write("| %135s " % str(col.states[i]).center(135))
 
-                print("|", end="\n")
+                file.write("|\n")
         else:
             i = 0
             for col in self.table:
-                print(HORIZONTAL_SYMBOL * 10, " E_{0} - token: {1}".format(i, col.token), HORIZONTAL_SYMBOL * 10)
+                file.write(HORIZONTAL_SYMBOL * 10 + " E_{0} - token: {1} ".format(i, col.token) + HORIZONTAL_SYMBOL * 10 + "\n")
                 for state in col.states:
-                    print(str(state).ljust(len(str(state))))
+                    file.write(str(state).ljust(len(str(state))) + "\n")
                 i += 1
-                print()
+                file.write("\n")
 
 
 class TreeBuilder:
@@ -335,21 +342,24 @@ class TreeBuilder:
 
         while k > -1:
             if isinstance(terms[k], Rule):
-                nextStates = self.searchStates(state.production[k].name, c, state.startColumn)
+                nextStates = self.searchStates(state, k, c, state.startColumn)
                 k -= 1
                 if len(nextStates) > 0:
-                    result.addChild(self.buildTreeHelper(nextStates[0], c))
-                    c = nextStates[0].startColumn.index
+                    result.addChild(self.buildTreeHelper(nextStates[-1], c))
+                    c = nextStates[-1].startColumn.index
             else:
                 k -= 1
                 c -= 1
 
+        if len(result.children) != 0:
+            result.lexeme = None
+
         return result
 
-    def searchStates(self, x, columnNumber, i):
+    def searchStates(self, inState, prodNum, columnNumber, i):
         subResult = []
         for state in self.table[columnNumber].states:
-            if state.name == x and state.completed():
+            if state.name == inState.production[prodNum].name and state.completed() and state != inState:
                 subResult.append(state)
 
         result = []
@@ -384,7 +394,8 @@ class TreeBuilder:
                     self.file.write('\n')
 
     def __printTreeToFileHelper(self, current_node, indent='', nodeType='init'):
-        name = repr(current_node.rule) + ' Lexeme: ' + current_node.lexeme.lexeme
+        lexemePart = '' if current_node.lexeme is None else ' Lexeme: ' + current_node.lexeme.lexeme
+        name = repr(current_node.rule) + lexemePart
 
         if nodeType == 'last':
             start_shape = LEFT_SYMBOL + HORIZONTAL_SYMBOL * LEVEL_INDENT

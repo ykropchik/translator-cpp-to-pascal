@@ -21,7 +21,7 @@ if __name__ == '__main__':
         earley = Earley(grammarParser.rules, "<программа>")
 
         earleyParseResult = earley.parse(lexicalAnalyzer.lexemeArray)
-        earley.printTable()
+        earley.printTableToFile()
         earley.printError()
         earleyTable = earley.table
 
