@@ -66,21 +66,21 @@ class LexicalAnalyzer:
 
         if re.match('^\+\+.+', word):
             self.lexemeArray.append(self.LexemeArrayType('++', LexemeType.INCREMENT, lineNumber))
-            self.__checkBySymbol(word.removeprefix('++'), lineNumber)
+            self.__checkBySymbol(word.replace('++', ''), lineNumber)
             return
 
         if re.match('.+\+\+$', word):
-            self.__checkBySymbol(word.removesuffix('++'), lineNumber)
+            self.__checkBySymbol(word.replace('++', ''), lineNumber)
             self.lexemeArray.append(self.LexemeArrayType('++', LexemeType.INCREMENT, lineNumber))
             return
 
         if re.match('^--.+', word):
             self.lexemeArray.append(self.LexemeArrayType('--', LexemeType.DECREMENT, lineNumber))
-            self.__checkBySymbol(word.removeprefix('--'), lineNumber)
+            self.__checkBySymbol(word.replace('--', ''), lineNumber)
             return
 
         if re.match('.+--$', word):
-            self.__checkBySymbol(word.removesuffix('--'), lineNumber)
+            self.__checkBySymbol(word.replace('--', ''), lineNumber)
             self.lexemeArray.append(self.LexemeArrayType('--', LexemeType.DECREMENT, lineNumber))
             return
 
