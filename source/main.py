@@ -31,7 +31,7 @@ if __name__ == '__main__':
             treeBuilder = TreeBuilder(earleyTable, grammarParser.rules)
 
             # treeBuilder.build_tree()
-            treeBuilder.build_tree_test()
+            treeBuilder.buildTree()
             treeBuilder.printTreeToFile()
 
             # print('_________________')
