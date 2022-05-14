@@ -80,23 +80,23 @@ class RegexpRule(object):
 
 
 class State(object):
-    def __init__(self, name, production, dot_index, start_column):
+    def __init__(self, name, production, dotIndex, startColumn):
         self.name = name
         self.production = production
-        self.start_column = start_column
+        self.startColumn = startColumn
         self.end_column = None
-        self.dot_index = dot_index
+        self.dotIndex = dotIndex
         self.rules = [t for t in production if isinstance(t, Rule)]
         self.children = []
 
     def __repr__(self):
         terms = [str(p) for p in self.production]
-        terms.insert(self.dot_index, u"·")
-        return "%-5s -> %-16s [%s-%s]" % (self.name, " ".join(terms), self.start_column, self.end_column)
+        terms.insert(self.dotIndex, u"·")
+        return "%-5s -> %-16s [%s-%s]" % (self.name, " ".join(terms), self.startColumn, self.end_column)
 
     def __eq__(self, other):
-        return (self.name, self.production, self.dot_index, self.start_column) == \
-               (other.name, other.production, other.dot_index, other.start_column)
+        return (self.name, self.production, self.dotIndex, self.startColumn) == \
+               (other.name, other.production, other.dotIndex, other.startColumn)
 
     def __ne__(self, other):
         return not (self == other)
@@ -108,12 +108,12 @@ class State(object):
         return len(str(self))
 
     def completed(self):
-        return self.dot_index >= len(self.production)
+        return self.dotIndex >= len(self.production)
 
     def next_term(self):
         if self.completed():
             return None
-        return self.production[self.dot_index]
+        return self.production[self.dotIndex]
 
     def addChild(self, state):
         self.children.append(state)
@@ -168,7 +168,7 @@ class Node(object):
 
     def __repr__(self):
         terms = [str(p) for p in self.state.production]
-        terms.insert(self.state.dot_index, u"·")
+        terms.insert(self.state.dotIndex, u"·")
         return "{0} -> {1}         Lexeme: {2}".format(self.state.name, " ".join(terms), self.lexeme)
 
 
@@ -182,8 +182,9 @@ class Earley:
             self.assumptions.add(assumption)
 
         def __str__(self):
-            return "{0} | Error: expected {1} instead of \"{2}\""\
-                .format(self.token.lineNumber, " or ".join(map(lambda x: "\'" + str(x) + "\'", self.assumptions)), self.token.lexeme)
+            return "{0} | Error: expected {1} instead of \"{2}\"" \
+                .format(self.token.lineNumber, " or ".join(map(lambda x: "\'" + str(x) + "\'", self.assumptions)),
+                        self.token.lexeme)
 
     def __init__(self, rules, axiom):
         self.rules = rules
@@ -199,7 +200,7 @@ class Earley:
             raise ValueError("Invalid axiom")
 
     def isOk(self):
-        return not self.semanticError is None
+        return self.semanticError is not None
 
     def findErrors(self):
         lastNonEmptyCol = None
@@ -211,14 +212,14 @@ class Earley:
                 break
 
         if lastNonEmptyColNumber == len(self.table) - 1:
-            self.semanticError = self.SemanticError(LexicalAnalyzer.LexemeArrayType("END OF FILE", LexemeType.EOF ,lastNonEmptyCol.token.lineNumber))
+            self.semanticError = self.SemanticError(
+                LexicalAnalyzer.LexemeArrayType("END OF FILE", LexemeType.EOF, lastNonEmptyCol.token.lineNumber))
         else:
             self.semanticError = self.SemanticError(self.table[lastNonEmptyColNumber + 1].token)
 
         for st in lastNonEmptyCol:
-            if not st.completed() and not isinstance(st.production[st.dot_index], Rule):
-                self.semanticError.addAssumption(st.production[st.dot_index])
-
+            if not st.completed() and not isinstance(st.production[st.dotIndex], Rule):
+                self.semanticError.addAssumption(st.production[st.dotIndex])
 
     def __predict(self, col, rule, state):
         for prod in rule.productions:
@@ -229,23 +230,23 @@ class Earley:
     def __scan(self, col, state, token):
         if not isinstance(token, RegexpRule):
             if token == col.token.lexeme:
-                col.add(State(state.name, state.production, state.dot_index + 1, state.start_column))
+                col.add(State(state.name, state.production, state.dotIndex + 1, state.startColumn))
                 state.addChild(col[-1])
         else:
             match = re.search(token.regexp, col.token.lexeme)
             if match:
-                col.add(State(state.name, state.production, state.dot_index + 1, state.start_column))
+                col.add(State(state.name, state.production, state.dotIndex + 1, state.startColumn))
                 state.addChild(col[-1])
 
     def __complete(self, col, state):
         if not state.completed():
             return
-        for st in state.start_column:
+        for st in state.startColumn:
             term = st.next_term()
             if not isinstance(term, Rule):
                 continue
             if term.name == state.name:
-                col.add(State(st.name, st.production, st.dot_index + 1, st.start_column))
+                col.add(State(st.name, st.production, st.dotIndex + 1, st.startColumn))
                 st.addChild(col[-1])
 
     def parse(self, lexemeArray):
@@ -279,10 +280,10 @@ class Earley:
         else:
             print(self.semanticError)
 
-    def printTable(self, type="ver"):
+    def printTable(self, tableType="ver"):
         maxRow = 0
         colNum = 0
-        if type == "hor":
+        if tableType == "hor":
             for col in self.table:
                 print("| %135s " % str(colNum).center(135), end="")
                 colNum += 1
@@ -317,38 +318,15 @@ class TreeBuilder:
         self.tree = None
         self.file = None
 
-    # def build_tree_test(self, state):
-    #     return self.build_tree_helper([], state, len(state.rules) - 1, state.end_column)
-    #
-    # def build_tree_helper(self, children, state, rule_index, end_column):
-    #     if rule_index < 0:
-    #         return [Node(state, children, state.start_column.token)]
-    #
-    #     rule = state.rules[rule_index]
-    #     outputs = []
-    #     for col in self.table[::-1]:
-    #         for st in col:
-    #             if st is state:
-    #                 break
-    #             if not st.completed() and st.name != rule.name:
-    #                 continue
-    #             test = self.build_tree_test(st)
-    #             for sub_tree in test:
-    #                 outputs.append([sub_tree])
-    #             if test:
-    #                 break
-    #
-    #     return outputs
-
-    def build_tree_test(self):
+    def buildTree(self):
         for state in self.table[-1]:
             if state.name == GAMMA_RULE and state.completed():
-                self.tree = self.build_tree_test_helper(self.table[0].states[0], len(self.table) - 1)
+                self.tree = self.buildTreeHelper(self.table[0].states[0], len(self.table) - 1)
                 return
         else:
             raise ValueError("Invalid earley table")
 
-    def build_tree_test_helper(self, state, j):
+    def buildTreeHelper(self, state, j):
         terms = state.production
         k = len(terms) - 1
         c = j
@@ -357,18 +335,18 @@ class TreeBuilder:
 
         while k > -1:
             if isinstance(terms[k], Rule):
-                nextStates = self.search_states(state.production[k].name, c, state.start_column)
+                nextStates = self.searchStates(state.production[k].name, c, state.startColumn)
                 k -= 1
                 if len(nextStates) > 0:
-                    result.addChild(self.build_tree_test_helper(nextStates[0], c))
-                    c = nextStates[0].start_column.index
+                    result.addChild(self.buildTreeHelper(nextStates[0], c))
+                    c = nextStates[0].startColumn.index
             else:
                 k -= 1
                 c -= 1
 
         return result
 
-    def search_states(self, x, columnNumber, i):
+    def searchStates(self, x, columnNumber, i):
         subResult = []
         for state in self.table[columnNumber].states:
             if state.name == x and state.completed():
@@ -376,50 +354,20 @@ class TreeBuilder:
 
         result = []
         for state in subResult:
-            if self.search_states_helper(state.name, state.start_column, i):
+            if self.searchStatesHelper(state.name, state.startColumn, i):
                 result.append(state)
 
         return result
 
-    def search_states_helper(self, x, column, i):
+    def searchStatesHelper(self, x, column, i):
         for state in column.states:
-            if not state.completed() and isinstance(state.production[state.dot_index], Rule) and state.production[state.dot_index].name == x and state.start_column == i:
+            if not state.completed() and \
+                    isinstance(state.production[state.dotIndex], Rule) and \
+                    state.production[state.dotIndex].name == x and \
+                    state.startColumn == i:
                 return True
 
         return False
-
-    def build_tree(self):
-        for state in self.table[-1]:
-            if state.name == GAMMA_RULE and state.completed():
-                # self.tree = self.table[0].states[0]
-                self.tree = self.__reduce_node(self.table[0].states[0])
-                return
-        else:
-            raise ValueError("Invalid earley table")
-
-    def __reduce_node(self, state):
-        if state.end_column:
-            lexeme = state.end_column.token
-        else:
-            lexeme = None
-
-        result = Node(state, [], lexeme)
-
-        if not state.children:
-            return result
-
-        for child in state.children:
-            child = self.__reduce_node(child)
-
-            if child.state.name == state.name and child.state.production == state.production and child.state.completed():
-                result.state = child.state
-                result.lexeme = child.state.end_column.token
-                result.children.extend(child.children)
-            elif child.state.completed():
-                if (child.state.rules and child.children) or not child.state.rules:
-                    result.children.append(child)
-
-        return result
 
     def printTreeToFile(self):
         if self.tree is not None:
@@ -447,7 +395,9 @@ class TreeBuilder:
 
         line = '{0}{1}{2}'.format(indent, start_shape, name)
         self.file.write(line + '\n')
-        nextIndent = '{0}{1}'.format(indent, VERTICAL_SYMBOL + ' ' * (len(start_shape)) if nodeType == 'mid' else ' ' * (len(start_shape) + 1))
+        nextIndent = '{0}{1}'.format(indent,
+                                     VERTICAL_SYMBOL + ' ' * (len(start_shape)) if nodeType == 'mid' else ' ' * (
+                                             len(start_shape) + 1))
 
         if len(current_node.children) != 0:
             if len(current_node.children) == 1:
@@ -471,7 +421,9 @@ class TreeBuilder:
             start_shape = ' '
 
         print('{0}{1}{2}'.format(indent, start_shape, node.state))
-        nextIndent = '{0}{1}'.format(indent, VERTICAL_SYMBOL + ' ' * (len(start_shape)) if nodeType == 'mid' else ' ' * (len(start_shape) + 1))
+        nextIndent = '{0}{1}'.format(indent,
+                                     VERTICAL_SYMBOL + ' ' * (len(start_shape)) if nodeType == 'mid' else ' ' * (
+                                             len(start_shape) + 1))
 
         if len(node.children) != 0:
             if len(node.children) == 1:

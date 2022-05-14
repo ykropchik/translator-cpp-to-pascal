@@ -57,7 +57,7 @@ class VariableSemanticAnalyser:
         return None
 
     def findName(self, node: Node):
-        if node.state.dot_index == 1:
+        if node.state.dotIndex == 1:
             if hasattr(node.state.production.terms[0], 'name') and node.state.production.terms[0].name == '<начало имени>':
                 for part in node.children:
                     return self.findName(part)
@@ -66,7 +66,7 @@ class VariableSemanticAnalyser:
                     return self.findName(part)
             if node.state.name == '<буква>':
                 return node.state.production.terms[0]
-        elif node.state.dot_index == 2:
+        elif node.state.dotIndex == 2:
             for child in node.children:
                 if child.state.name == '<продолжение имени>':
                     nameContinuation = ''
