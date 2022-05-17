@@ -6,7 +6,39 @@ from source.Semantic_Analyzer import ReservedWords
 class Variable(object):
     def __init__(self, type_v, name):
         self.type_v = type_v,
-        self.name = name,
+        self.name = name
+
+
+class VariableStorage(object):
+    def __init__(self):
+        self.variables = list()
+        self.children = list()
+        self.parent = None
+
+    def addChildren(self):
+        var_s = VariableStorage()
+        self.children.append(var_s)
+        var_s.parent = self
+        return var_s
+
+    def addVariable(self, var: Variable):
+        self.variables.append(var)
+
+    def exist(self, name, scope):
+        while scope is not None:
+            for value in scope.variables:
+                if value.name == name:
+                    return True
+            scope = scope.parent
+        return False
+
+    def getVariable(self, name, scope):
+        while scope is not None:
+            for value in scope.variables:
+                if value.name == name:
+                    return value
+            scope = scope.parent
+        return None
 
 
 class Function(object):
@@ -15,9 +47,10 @@ class Function(object):
         self.name = name,
         self.params = params
 
+
 class SemanticError:
-    def __init__(self, line, name, errorName):
-        self.errorName = errorName
+    def __init__(self, line, name, error_name):
+        self.errorName = error_name
         self.line = line
         self.name = name
         self.assumptions = set()
@@ -26,81 +59,39 @@ class SemanticError:
         self.assumptions.add(assumption)
 
     def __str__(self):
-        return "{0} | Error: {1} \"{2}\""\
+        return "{0} | Error: {1} \"{2}\"" \
             .format(self.line, self.errorName, self.name)
 
+
 class VariableSemanticAnalyser:
-    def __init__(self, tree, *variables: Variable):
-        self.variables = list(variables),
+    def __init__(self, tree):
         self.tree = tree,
         self.file = None
 
     def findExpressionType(self, node: Node):
-        for part in node.children:
-            if part.state.name == '<число>':
-                if part.state.production.terms[0].name == '<целое число>':
-                    return 'int'
-                if part.state.production.terms[0].name == '- <целое число>':
-                    return 'int'
-                if part.state.production.terms[0].name == '<вещественное число>':
-                    return 'float'
-                if part.state.production.terms[0].name == '- <вещественное число>':
-                    return 'float'
-            if part.state.name == '<булево выражение>':
-                return 'bool'
-            if part.state.name == '\'<буква>\'':
-                return 'char'
-            if part.state.name == '<алгебраическое выражение>':
-                return 'int'
-            # if part.value.name == '<вызов функции>':
-            #     return 'func'
-        return None
+        if node.lexeme and node.lexeme.lexemeType.name == 'INT_NUMBER':
+            return ['int']
+        elif node.lexeme and node.lexeme.lexemeType.name == 'REAL_NUMBER':
+            return ['double', 'float']
+        elif node.lexeme and node.lexeme.lexemeType.name == 'CHAR_DATA':
+            return ['char']
+        elif node.lexeme and node.lexeme.lexemeType.name == 'STRING_DATA':
+            return ['string']
+        else:
+            return ['int']
 
-    def findName(self, node: Node):
-        if node.state.dotIndex == 1:
-            if hasattr(node.state.production.terms[0], 'name') and node.state.production.terms[0].name == '<начало имени>':
-                for part in node.children:
-                    return self.findName(part)
-            if hasattr(node.state.production.terms[0], 'name') and node.state.production.terms[0].name == '<буква>':
-                for part in node.children:
-                    return self.findName(part)
-            if node.state.name == '<буква>':
-                return node.state.production.terms[0]
-        elif node.state.dotIndex == 2:
-            for child in node.children:
-                if child.state.name == '<продолжение имени>':
-                    nameContinuation = ''
-                    for part in child.children:
-                        nameContinuation += part.state.production.terms[0]
-                    return nameContinuation
-
-        return None
-
-    def findType(self, node: Node):
-        for part in node.children:
-            if part.state.name == 'bool' or part.state.name == 'char' or part.state.name == 'short' or part.state.name == \
-                    'unsigned short int' or part.state.name == 'int' or part.state.name == \
-                    'short int' or part.state.name == 'unsigned short' or part.state.name == \
-                    'unsigned int' or part.state.name == 'float' or part.state.name == 'double':
-                return part.state.name
-            elif part.state.production.terms[0].name == '<алгебраическое выражение>':
-                return 'int'
-            return None
-
-    # TODO:: Проверить работу find-функций
-    def addVariable(self, node: Node):  # Input: value = <инициализация переменной> || <объявление переменной> ||
-        # <обновление переменной>
+    def addVariable(self, node: Node, scope: VariableStorage):
         newVariable = Variable(None, None)
         typeCheck = None
         errorCheck = None
         for part in node.children:
-            if part.state.name == '<выражение>':
-                typeCheck = self.findExpressionType(part)
-            if part.state.name == '<имя переменной>':
-                newVariable.name = part.lexeme.lexeme
-            if part.state.name == '<тип данных>':
+            if part.rule.name == '<тип данных>':
                 newVariable.type_v = part.lexeme.lexeme
-        if typeCheck and typeCheck != newVariable.type_v and newVariable.name[0] is not None:
+            if part.rule.name == '<имя переменной>':
+                newVariable.name = part.lexeme.lexeme
+            if part.rule.name == '<выражение>':
+                typeCheck = self.findExpressionType(part)
+        if typeCheck and newVariable.type_v not in typeCheck and newVariable.name[0] is not None:
             print(SemanticError(node.lexeme.lineNumber, newVariable.name,
                                 ErrorTypeSemantic.TYPE_MISMATCH.value))
             errorCheck = True
@@ -108,48 +99,51 @@ class VariableSemanticAnalyser:
             print(SemanticError(node.lexeme.lineNumber, newVariable.name,
                                 ErrorTypeSemantic.USAGE_OF_RESERVED_IDENTIFIER.value))
             errorCheck = True
-        for variable in self.variables[0]:
-            if variable.name == newVariable.name:
-                print(SemanticError(node.lexeme.lineNumber, newVariable.name,
-                                    ErrorTypeSemantic.MULTIPLE_VARIABLE_DECLARATION.value))
-                errorCheck = True
+        if scope.exist(newVariable.name, scope):
+            print(SemanticError(node.lexeme.lineNumber, newVariable.name,
+                                ErrorTypeSemantic.MULTIPLE_VARIABLE_DECLARATION.value))
+            errorCheck = True
         if errorCheck is None:
-            # TODO: хз почему variables - это не list
-            # Возможно PyCharm думает, что это обращение к атрибуту которого не существует.
-            self.variables[0].append(newVariable)
+            scope.addVariable(newVariable)
 
-    def updateVariableCheck(self, node: Node):  # Input: value = <обновление переменной>
+    def updateVariableCheck(self, node: Node, scope: VariableStorage):
         typeCheck = None
         nameCheck = ''
-        exist = None
         for part in node.children:
-            if part.state.name == '<выражение>':
-                typeCheck = self.findExpressionType(part)
-            if part.state.name == '<имя переменной>':
+            if part.rule.name == '<имя переменной>':
                 nameCheck = part.lexeme.lexeme
-        for variable in self.variables[0]:
-            if variable.name == nameCheck:
-                exist = True
-                if variable.type_v != typeCheck:
-                    print(SemanticError(node.lexeme.lineNumber, nameCheck, ErrorTypeSemantic.TYPE_MISMATCH.value))
-        if exist is None:
+            if part.rule.name == '<выражение>':
+                typeCheck = self.findExpressionType(part)
+            if part.rule.name == '<унарный алгебраический оператор>':
+                typeCheck = ['int']
+        if not scope.exist(nameCheck, scope):
             print(SemanticError(node.lexeme.lineNumber, nameCheck, ErrorTypeSemantic.UNDECLARED_VARIABLE.value))
+        else:
+            var = scope.getVariable(nameCheck, scope)
+            if var.type_v not in typeCheck:
+                print(SemanticError(node.lexeme.lineNumber, nameCheck, ErrorTypeSemantic.TYPE_MISMATCH.value))
 
-    def parse(self, node):
-        if node.state.name == '<инициализация переменной>' or node.state.name == '<объявление переменной>':
-            self.addVariable(node)
-        if node.state.name == '<обновление переменной>':
-            self.updateVariableCheck(node)
+    def parse(self, node, scope: VariableStorage):
+        newScope = scope
+        if node.rule.name == '<инициализация переменной>':
+            self.addVariable(node, scope)
+        if node.rule.name == '<обновление переменной>':
+            self.updateVariableCheck(node, scope)
+        if node.rule.name == '<цикл for>':
+            newScope = scope.addChildren()
+        if node.rule.name == '<цикл while>':
+            newScope = scope.addChildren()
         if node.children:
             for nextNode in node.children:
-                self.parse(nextNode)
+                self.parse(nextNode, newScope)
 
 
 class FunctionSemanticAnalyser:
-    def __init__(self, tree, *functions: Function):
-        self.tree = tree,
-        self.functions = list(functions),
+    def __init__(self, tree):
+        self.tree = tree
+        self.functions = list()
         self.file = None
 
     def parse(self):
         print(self.tree)
+

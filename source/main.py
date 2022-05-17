@@ -1,6 +1,6 @@
 from source.Lexer.LexicalAnalyzer import *
 from source.Parser.GrammarParser import *
-from source.Semantic_Analyzer.SemanticAnalyzer import VariableSemanticAnalyser
+from source.Semantic_Analyzer.SemanticAnalyzer import *
 
 if __name__ == '__main__':
     print("-" * 10, "Lexer", "-" * 10)
@@ -34,8 +34,10 @@ if __name__ == '__main__':
             treeBuilder.buildTree()
             treeBuilder.printTreeToFile()
 
-            # print('_________________')
-            # semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
-            # semanticAnalyser.parse(treeBuilder.tree)
+            variableStorage = VariableStorage()
+
+            print('_________________')
+            semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
+            semanticAnalyser.parse(treeBuilder.tree, variableStorage)
 
     print()
