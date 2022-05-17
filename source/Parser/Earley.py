@@ -351,8 +351,8 @@ class TreeBuilder:
                 k -= 1
                 c -= 1
 
-        if len(result.children) != 0:
-            result.lexeme = None
+        # if len(result.children) != 0:
+        #     result.lexeme = None
 
         return result
 
