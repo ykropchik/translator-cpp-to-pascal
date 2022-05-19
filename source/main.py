@@ -1,6 +1,6 @@
 from source.Lexer.LexicalAnalyzer import *
 from source.Parser.GrammarParser import *
-# from source.CodeGenerator.Generator import Generator
+from source.CodeGenerator.Generator import *
 from source.Semantic_Analyzer.SemanticAnalyzer import *
 
 if __name__ == '__main__':
