@@ -1,3 +1,9 @@
+
+int test(int mul , int div) {
+    int b = 4;
+    return mul;
+}
+
 void main() {
    int main = 24 + 21 + a + test();
    double err = 'p';

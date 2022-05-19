@@ -65,7 +65,8 @@ class SemanticError:
 
 class VariableSemanticAnalyser:
     def __init__(self, tree):
-        self.tree = tree,
+        self.tree = tree
+        self.functions = []
         self.file = None
 
     def findExpressionType(self, node: Node):
@@ -123,6 +124,14 @@ class VariableSemanticAnalyser:
             if var.type_v not in typeCheck:
                 print(SemanticError(node.lexeme.lineNumber, nameCheck, ErrorTypeSemantic.TYPE_MISMATCH.value))
 
+    def addFunction(self, node: Node):
+        newFunction = Function(None, None, None)
+        for part in node.children:
+            if part.rule.name == '<тип данных>':
+                newFunction.type_v = part.lexeme.lexeme
+            if part.rule.name == '<имя переменной>':
+                newFunction.name = part.lexeme.lexeme
+
     def parse(self, node, scope: VariableStorage):
         newScope = scope
         if node.rule.name == '<инициализация переменной>':
@@ -133,17 +142,11 @@ class VariableSemanticAnalyser:
             newScope = scope.addChildren()
         if node.rule.name == '<цикл while>':
             newScope = scope.addChildren()
+        if node.rule.name == '<объявление функции>':
+            self.addFunction(node)
+            newScope = scope.addChildren()
+        if node.rule.name == '<главная функция>':
+            newScope = scope.addChildren()
         if node.children:
             for nextNode in node.children:
                 self.parse(nextNode, newScope)
-
-
-class FunctionSemanticAnalyser:
-    def __init__(self, tree):
-        self.tree = tree
-        self.functions = list()
-        self.file = None
-
-    def parse(self):
-        print(self.tree)
-
