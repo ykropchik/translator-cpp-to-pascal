@@ -1,11 +1,11 @@
-from source.Parser.Earley import Node
+from source.Parser.Earley import TreeNode, Node
 from source.Lexer.ErrorTypes import ErrorTypeSemantic
 from source.Semantic_Analyzer import ReservedWords
 
 
 class Variable(object):
     def __init__(self, type_v, name):
-        self.type_v = type_v,
+        self.type_v = type_v
         self.name = name
 
 
@@ -42,9 +42,9 @@ class VariableStorage(object):
 
 
 class Function(object):
-    def __init__(self, type_v, name, params):
-        self.type_v = type_v,
-        self.name = name,
+    def __init__(self, type_v=None, name=None, params=[]):
+        self.type_v = type_v
+        self.name = name
         self.params = params
 
 
@@ -124,15 +124,76 @@ class VariableSemanticAnalyser:
             if var.type_v not in typeCheck:
                 print(SemanticError(node.lexeme.lineNumber, nameCheck, ErrorTypeSemantic.TYPE_MISMATCH.value))
 
-    def addFunction(self, node: Node):
-        newFunction = Function(None, None, None)
+    def addFunction(self, node: Node, scope: VariableStorage):
+        newFunction = Function()
         for part in node.children:
             if part.rule.name == '<тип данных>':
                 newFunction.type_v = part.lexeme.lexeme
             if part.rule.name == '<имя переменной>':
                 newFunction.name = part.lexeme.lexeme
+            if part.rule.name == '<формальные параметры>':
+                children = part.children
+                while len(children) != 2:
+                    var = Variable(children[0].lexeme.lexeme, children[1].lexeme.lexeme)
+                    scope.addVariable(var)
+                    newFunction.params.append(var)
+                    children = children[2].children
+                var = Variable(children[0].lexeme.lexeme, children[1].lexeme.lexeme)
+                scope.addVariable(var)
+                newFunction.params.append(var)
+            if part.rule.name == '<тело функции>':
+                self.parse(part, scope)
+                returnExpression = part.children
+                while len(returnExpression) != 1:
+                    returnExpression = returnExpression[1].children
+                returnExpression = self.parseExpression(returnExpression[0].children[0].children[0], scope)
+                if newFunction.type_v in returnExpression:
+                    self.functions.append(newFunction)
+                elif len(returnExpression) == 0:
+                    print(SemanticError(node.lexeme.lineNumber, '', ErrorTypeSemantic.EXPRESSION_MULTIPLE_TYPES.value))
+                else:
+                    print(SemanticError(node.lexeme.lineNumber, newFunction.type_v + '!=' + returnExpression[0], ErrorTypeSemantic.FUNCTION_TYPE_MISMATCH.value))
 
-    def parse(self, node, scope: VariableStorage):
+    def parseExpression(self, expression, scope: VariableStorage):
+        if expression.rule.name == '<алгебраическое выражение>':
+            if len(expression.children) == 1:
+                return [self.parseOperand(expression.children[0], scope)]
+            elif expression.children[0].rule.name == '<унарный алгебраический оператор>':
+                return [self.parseOperand(expression.children[1], scope)]
+            elif expression.children[1].rule.name == '<унарный алгебраический оператор>':
+                return [self.parseOperand(expression.children[0], scope)]
+            else:
+                exp_type = self.parseOperand(expression.children[0], scope)
+                expression_temp = expression.children[2]
+                while len(expression_temp.children) == 3:
+                    if exp_type != self.parseOperand(expression_temp.children[0], scope):
+                        return []
+                    expression_temp = expression_temp.children[2]
+                if exp_type != self.parseOperand(expression_temp.children[0], scope):
+                    return []
+                return [exp_type]
+        if expression.rule.name == '<булево выражение>':
+            if 'целое число' in expression.children[0].children[0].children[0].children[0].rule.name and len(
+                    expression.children[0].children) == 1:
+                return ['int']
+            if 'вещественное число' in expression.children[0].children[0].children[0].children[0].rule.name and len(
+                    expression.children[0].children) == 1:
+                return ['float', 'double']
+            else:
+                return ['bool']
+
+    def parseOperand(self, operand: TreeNode, scope: VariableStorage):
+        if operand.children[0].rule.name == '<имя переменной>':
+            return scope.getVariable(operand.children[0].lexeme.lexeme, scope).type_v
+        elif operand.children[0].rule.name == '<вызов функции>':
+            for func in self.functions:
+                if func.name == operand.children[0].children[0].lexeme.lexeme:
+                    return func.type_v
+            return None
+        else:
+            return 'int'
+
+    def parse(self, node, scope: VariableStorage, func=False):
         newScope = scope
         if node.rule.name == '<инициализация переменной>':
             self.addVariable(node, scope)
@@ -142,11 +203,15 @@ class VariableSemanticAnalyser:
             newScope = scope.addChildren()
         if node.rule.name == '<цикл while>':
             newScope = scope.addChildren()
-        if node.rule.name == '<объявление функции>':
-            self.addFunction(node)
-            newScope = scope.addChildren()
+        # if node.rule.name == '<объявление функции>':
+        #     newScope = scope.addChildren()
+        #     self.addFunction(node, newScope)
         if node.rule.name == '<главная функция>':
             newScope = scope.addChildren()
         if node.children:
             for nextNode in node.children:
-                self.parse(nextNode, newScope)
+                if nextNode.rule.name == '<объявление функции>':
+                    newScope = scope.addChildren()
+                    self.addFunction(nextNode, newScope)
+                else:
+                    self.parse(nextNode, newScope)

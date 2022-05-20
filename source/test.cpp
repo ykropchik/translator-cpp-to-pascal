@@ -1,6 +1,8 @@
-int test(int mul , int div) {
+
+int test(char mul , char div) {
+    char b = 'b';
     int b = 4;
-    return mul;
+    return mul + div + b;
 }
 
 void main() {

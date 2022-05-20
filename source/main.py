@@ -38,8 +38,10 @@ if __name__ == '__main__':
             # generator = Generator(treeBuilder.tree)
             # result = generator.generate()
 
-            # print('_________________')
-            # semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
-            # semanticAnalyser.parse(treeBuilder.tree)
+            variableStorage = VariableStorage()
+
+            print('_________________')
+            semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
+            semanticAnalyser.parse(treeBuilder.tree, variableStorage)
 
     print()
