@@ -99,6 +99,9 @@ class LexicalAnalyzer:
         self.errors.append(self.ErrorType(lineNumber, word))
         self.lexemeArray.append(self.LexemeArrayType(word, LexemeType.UNDEFINED, lineNumber))
 
+    def __removeComments(self, line):
+        return re.sub('//.*', '', line)
+
     def startParsing(self):
         if not self.inputFile.read(1):
             return False
@@ -108,7 +111,8 @@ class LexicalAnalyzer:
         lineNumber = 0
         for line in self.inputFile.readlines():
             lineNumber += 1
-            splitedLine = self.__splitBySeparators(line)
+            removedComments = self.__removeComments(line)
+            splitedLine = self.__splitBySeparators(removedComments)
             if splitedLine != '':
                 for word in splitedLine.split():
                     try:
@@ -116,7 +120,7 @@ class LexicalAnalyzer:
                     except KeyError as e:
                         self.__checkBySymbol(word, lineNumber)
 
-        if self.errors:
+        if self.errors or len(self.lexemeArray) == 0:
             return False
         else:
             return True

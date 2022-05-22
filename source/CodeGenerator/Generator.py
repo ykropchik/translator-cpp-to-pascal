@@ -433,7 +433,12 @@ class Generator(object):
             for param in node.params:
                 paramsStr += self.__generateVar(param, 0) + ','
         paramsStr = paramsStr[:-1]
-        result += f'({paramsStr});\n'
+        result += f'({paramsStr})'
+
+        if node.returnType is not None:
+            result += f': {Types[node.returnType]}\n'
+        else:
+            result += '\n'
 
         result += self.__generateVarsBlock(node.vars, level)
         result += INDENT * level + 'begin\n'
