@@ -35,8 +35,9 @@ if __name__ == '__main__':
             treeBuilder.buildTree()
             treeBuilder.printTreeToFile()
 
-            # generator = Generator(treeBuilder.tree)
-            # result = generator.generate()
+            generator = Generator(treeBuilder.tree)
+            generator.generate()
+            print(generator.resultCode)
 
             variableStorage = VariableStorage()
 
