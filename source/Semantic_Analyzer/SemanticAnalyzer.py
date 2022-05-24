@@ -91,7 +91,10 @@ class VariableSemanticAnalyser:
             if part.rule.name == '<имя переменной>':
                 newVariable.name = part.lexeme.lexeme
             if part.rule.name == '<выражение>':
-                typeCheck = self.findExpressionType(part)
+                if len(part.children) == 0:
+                    typeCheck = self.findExpressionType(part)
+                else:
+                    typeCheck = self.parseExpression(part.children[0], scope)
         if typeCheck and newVariable.type_v not in typeCheck and newVariable.name[0] is not None:
             print(SemanticError(node.lexeme.lineNumber, newVariable.name,
                                 ErrorTypeSemantic.TYPE_MISMATCH.value))
@@ -167,10 +170,10 @@ class VariableSemanticAnalyser:
                 expression_temp = expression.children[2]
                 while len(expression_temp.children) == 3:
                     if exp_type != self.parseOperand(expression_temp.children[0], scope):
-                        return []
+                        exp_type = None
                     expression_temp = expression_temp.children[2]
                 if exp_type != self.parseOperand(expression_temp.children[0], scope):
-                    return []
+                    exp_type = None
                 return [exp_type]
         if expression.rule.name == '<булево выражение>':
             if 'целое число' in expression.children[0].children[0].children[0].children[0].rule.name and len(
@@ -184,11 +187,17 @@ class VariableSemanticAnalyser:
 
     def parseOperand(self, operand: TreeNode, scope: VariableStorage):
         if operand.children[0].rule.name == '<имя переменной>':
-            return scope.getVariable(operand.children[0].lexeme.lexeme, scope).type_v
+            if scope.getVariable(operand.children[0].lexeme.lexeme, scope):
+                return scope.getVariable(operand.children[0].lexeme.lexeme, scope).type_v
+            else:
+                print(SemanticError(operand.lexeme.lineNumber, operand.lexeme.lexeme, ErrorTypeSemantic.UNDECLARED_VARIABLE.value))
+                return None
         elif operand.children[0].rule.name == '<вызов функции>':
             for func in self.functions:
                 if func.name == operand.children[0].children[0].lexeme.lexeme:
                     return func.type_v
+            print(SemanticError(operand.lexeme.lineNumber, operand.children[0].children[0].lexeme.lexeme,
+                                ErrorTypeSemantic.UNDECLARED_FUNCTION.value))
             return None
         else:
             return 'int'
