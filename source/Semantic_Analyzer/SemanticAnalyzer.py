@@ -155,7 +155,7 @@ class VariableSemanticAnalyser:
                 elif len(returnExpression) == 0:
                     print(SemanticError(node.lexeme.lineNumber, '', ErrorTypeSemantic.EXPRESSION_MULTIPLE_TYPES.value))
                 else:
-                    print(SemanticError(node.lexeme.lineNumber, newFunction.type_v + '!=' + returnExpression[0], ErrorTypeSemantic.FUNCTION_TYPE_MISMATCH.value))
+                    print(SemanticError(node.lexeme.lineNumber, newFunction.type_v + '!=' + str(returnExpression[0]), ErrorTypeSemantic.FUNCTION_TYPE_MISMATCH.value))
 
     def parseExpression(self, expression, scope: VariableStorage):
         if expression.rule.name == '<алгебраическое выражение>':
@@ -176,6 +176,9 @@ class VariableSemanticAnalyser:
                     exp_type = None
                 return [exp_type]
         if expression.rule.name == '<булево выражение>':
+            if expression.children[0].children[0].children[0].rule.name == '<имя переменной>' and len(
+                    expression.children[0].children) == 1:
+                return [scope.getVariable(expression.children[0].children[0].children[0].lexeme.lexeme, scope).type_v]
             if 'целое число' in expression.children[0].children[0].children[0].children[0].rule.name and len(
                     expression.children[0].children) == 1:
                 return ['int']
@@ -195,7 +198,26 @@ class VariableSemanticAnalyser:
         elif operand.children[0].rule.name == '<вызов функции>':
             for func in self.functions:
                 if func.name == operand.children[0].children[0].lexeme.lexeme:
-                    return func.type_v
+                    temp = operand.children[0]
+                    if len(operand.children[0].children) == 2:
+                        temp = operand.children[0].children[1]
+                    params = []
+                    while len(temp.children) == 2:
+                        params += self.parseExpression(temp.children[0].children[0], scope)
+                        temp = temp.children[1]
+                    if len(operand.children[0].children) == 2:
+                        params += self.findExpressionType(temp.children[0])
+                    if len(params) != len(func.params):
+                        print(SemanticError(operand.lexeme.lineNumber, func.name,
+                                            ErrorTypeSemantic.FUNCTION_PARAMETERS_MISMATCH.value))
+                        return None
+                    else:
+                        for i in range(len(params)):
+                            if params[i] != func.params[i].type_v:
+                                print(SemanticError(operand.lexeme.lineNumber, func.name,
+                                                    ErrorTypeSemantic.FUNCTION_PARAMETERS_MISMATCH.value))
+                                return None
+                        return func.type_v
             print(SemanticError(operand.lexeme.lineNumber, operand.children[0].children[0].lexeme.lexeme,
                                 ErrorTypeSemantic.UNDECLARED_FUNCTION.value))
             return None

@@ -1,12 +1,11 @@
 // Проверка синтаксического
-//int test(char mul , char div) {
-//    char b = 'b';
-//    int b = 4;
-//    return mul + div + b;
-//}
+int test(int d) {
+    int b = 2;
+    return b;
+}
 
 void main() {
-    int ma = 24 + 21 + a + test();
+    int ma = 24 + 21 + a + test(1 , 2);
     double err = 'p';
     b = 12;
     m = g;
