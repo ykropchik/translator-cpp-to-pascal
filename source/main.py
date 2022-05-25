@@ -2,6 +2,7 @@ from source.Lexer.LexicalAnalyzer import *
 from source.Parser.GrammarParser import *
 from source.CodeGenerator.Generator import *
 from source.Semantic_Analyzer.SemanticAnalyzer import *
+from source.Optimizer.Optimizer import *
 
 if __name__ == '__main__':
     print("-" * 10, "Lexer", "-" * 10)
@@ -39,10 +40,13 @@ if __name__ == '__main__':
             # generator.generate()
             # print(generator.resultCode)
 
-            variableStorage = VariableStorage()
+            # variableStorage = VariableStorage()
+            #
+            # print('_________________')
+            # semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
+            # semanticAnalyser.parse(treeBuilder.tree, variableStorage)
 
-            print('_________________')
-            semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
-            semanticAnalyser.parse(treeBuilder.tree, variableStorage)
+            optimizer = Optimizer(treeBuilder.tree)
+            optimizer.optimize()
 
     print()

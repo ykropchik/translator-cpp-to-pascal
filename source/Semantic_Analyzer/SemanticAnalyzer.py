@@ -185,6 +185,11 @@ class VariableSemanticAnalyser:
             if 'вещественное число' in expression.children[0].children[0].children[0].children[0].rule.name and len(
                     expression.children[0].children) == 1:
                 return ['float', 'double']
+            if expression.children[0].children[0].children[0].rule.name == '<вызов функции>' and len(
+                    expression.children[0].children) == 1:
+                for func in self.functions:
+                    if func.name == expression.children[0].children[0].children[0].children[0].lexeme.lexeme:
+                        return [func.type_v]
             else:
                 return ['bool']
 
@@ -203,7 +208,10 @@ class VariableSemanticAnalyser:
                         temp = operand.children[0].children[1]
                     params = []
                     while len(temp.children) == 2:
-                        params += self.parseExpression(temp.children[0].children[0], scope)
+                        if len(temp.children[0].children) != 0:
+                            params += self.parseExpression(temp.children[0].children[0], scope)
+                        else:
+                            params += self.findExpressionType(temp.children[0])
                         temp = temp.children[1]
                     if len(operand.children[0].children) == 2:
                         params += self.findExpressionType(temp.children[0])
