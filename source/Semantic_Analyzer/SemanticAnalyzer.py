@@ -4,7 +4,7 @@ from source.Semantic_Analyzer import ReservedWords
 
 
 class Variable(object):
-    def __init__(self, type_v, name):
+    def __init__(self, type_v=None, name=None):
         self.type_v = type_v
         self.name = name
 
@@ -30,6 +30,12 @@ class VariableStorage(object):
                 if value.name == name:
                     return True
             scope = scope.parent
+        return False
+
+    def localExist(self, name, scope):
+        for value in scope.variables:
+            if value.name == name:
+                return value
         return False
 
     def getVariable(self, name, scope):

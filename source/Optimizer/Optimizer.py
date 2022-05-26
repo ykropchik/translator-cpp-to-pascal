@@ -1,10 +1,18 @@
 from source.Parser.Earley import *
+from source.Semantic_Analyzer.SemanticAnalyzer import VariableStorage
+
+
+class LexemeArrayType(object):
+    def __init__(self, lexeme, lexeme_type, line_number):
+        self.lexeme = lexeme
+        self.lexemeType = lexeme_type
+        self.lineNumber = line_number
 
 
 class Variable(object):
-    def __init__(self, name=None, type_v=None):
+    def __init__(self, name=None, exp_link=None):
         self.name = name
-        self.type_v = type_v
+        self.exp_link = exp_link
 
 
 class Function(object):
@@ -36,13 +44,15 @@ class FunctionStorage(object):
     def optimizeUnused(self):
         for func in self.functions:
             if not func.used:
-                func.link = None
+                func.link = None  # TODO: удалить из дерева ноду по ссылке link
 
 
 class Optimizer(object):
-    def __init__(self, tree, function_storage=FunctionStorage()):
+    def __init__(self, tree, rules, function_storage=FunctionStorage(), variable_storage=VariableStorage()):
         self.functionStorage = function_storage
+        self.variableStorage = variable_storage
         self.tree = tree.children[0]
+        self.rules = rules
 
     def add_function(self, node: TreeNode):
         newFunction = Function()
@@ -56,17 +66,49 @@ class Optimizer(object):
             newFunction.params.append(Variable(tempParam[1].lexeme.lexeme, tempParam[0].lexeme.lexeme))
         self.functionStorage.functions.append(newFunction)
 
-    def parse(self, node: TreeNode):
+    def addVariable(self, node: TreeNode, scope: VariableStorage):
+        newVariable = Variable()
+        newVariable.name = node.children[1].lexeme.lexeme
+        newVariable.exp_link = node.children[2].children[0]
+        scope.addVariable(newVariable)
+
+    def updateVariable(self, node: TreeNode, scope: VariableStorage):
+        if scope.localExist(node.children[0].lexeme.lexeme, scope):
+            var = scope.localExist(node.children[0].lexeme.lexeme, scope)
+            upd = node.children[1].children[0]
+            if var.exp_link.rule.name == '<алгебраическое выражение>' and upd.rule.name == '<алгебраическое выражение>':
+                nodePlus = TreeNode(Rule(self.rules[43].name),
+                                    LexemeArrayType('+', LexemeType.PLUS, var.exp_link.lexeme.lineNumber))
+                endOfVar = var.exp_link.children
+                while len(endOfVar) == 3:
+                    endOfVar = endOfVar[2].children
+                endOfVar.append(nodePlus)
+                endOfVar.append(upd)
+                node = None  # TODO: удалить из дерева ноду node
+
+    def parse(self, node: TreeNode, scope: VariableStorage):
+        newScope = scope
+        if node.rule.name == '<инициализация переменной>':
+            self.addVariable(node, scope)
+        if node.rule.name == '<обновление переменной>':
+            self.updateVariable(node, scope)
         if node.rule.name == '<объявление функции>':
+            newScope = newScope.addChildren()
             self.add_function(node)
+        if node.rule.name == '<цикл for>':
+            newScope = scope.addChildren()
+        if node.rule.name == '<цикл while>':
+            newScope = scope.addChildren()
+        if node.rule.name == '<главная функция>':
+            newScope = scope.addChildren()
         if node.rule.name == '<вызов функции>':
             if self.functionStorage.getFunction(node) is not None:
                 self.functionStorage.getFunction(node).used = True
         if node.children:
             for nextNode in node.children:
-                self.parse(nextNode)
+                self.parse(nextNode, newScope)
 
     def optimize(self):
-        self.parse(self.tree)
+        self.parse(self.tree, self.variableStorage)
         self.functionStorage.optimizeUnused()
         print('jh')

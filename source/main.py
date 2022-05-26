@@ -46,7 +46,7 @@ if __name__ == '__main__':
             # semanticAnalyser = VariableSemanticAnalyser(treeBuilder.tree)
             # semanticAnalyser.parse(treeBuilder.tree, variableStorage)
 
-            optimizer = Optimizer(treeBuilder.tree)
+            optimizer = Optimizer(treeBuilder.tree, grammarParser.rules)
             optimizer.optimize()
 
     print()

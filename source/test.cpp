@@ -18,7 +18,8 @@
 //}
 
 int test(char mul , char div) {
-    int a = 3;
+    int a = 3 + 2;
+    a = 8 + 2;
     if (a < 5) {
         int result = 5 + 3;
     }
